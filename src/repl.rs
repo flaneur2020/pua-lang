@@ -19,7 +19,7 @@ pub fn start(stdin: Stdin, stdout: Stdout) {
             let tok = l.next_token();
 
             match tok.token_type {
-                TokenType::EOF => {
+                TokenType::Eof => {
                     break;
                 }
                 _ => {
