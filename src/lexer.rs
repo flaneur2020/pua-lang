@@ -1,4 +1,4 @@
-use token::{Token, TokenType};
+use token::Token;
 
 pub struct Lexer<'a> {
     input: &'a str,
@@ -19,13 +19,6 @@ impl<'a> Lexer<'a> {
         lexer.read_char();
 
         return lexer;
-    }
-
-    fn new_token(token_type: TokenType, ch: u8) -> Token {
-        Token {
-            token_type,
-            literal: String::from_utf8(vec![ch]).unwrap(),
-        }
     }
 
     fn read_char(&mut self) {
@@ -64,87 +57,46 @@ impl<'a> Lexer<'a> {
     }
 
     pub fn next_token(&mut self) -> Token {
-        let tok;
-
         self.skip_whitespace();
 
-        match self.ch {
+        let tok = match self.ch {
             b'=' => {
                 if self.nextch_is(b'=') {
-                    let start_pos = self.pos;
                     self.read_char();
-                    tok = Token {
-                        token_type: TokenType::Eq,
-                        literal: String::from(&self.input[start_pos..self.next_pos]),
-                    };
+                    Token::Equal
                 } else {
-                    tok = Self::new_token(TokenType::Assign, self.ch);
+                    Token::Assign
                 }
             }
-            b'+' => {
-                tok = Self::new_token(TokenType::Plus, self.ch);
-            }
-            b'-' => {
-                tok = Self::new_token(TokenType::Minus, self.ch);
-            }
+            b'+' => Token::Plus,
+            b'-' => Token::Minus,
             b'!' => {
                 if self.nextch_is(b'=') {
-                    let start_pos = self.pos;
                     self.read_char();
-                    tok = Token {
-                        token_type: TokenType::NotEq,
-                        literal: String::from(&self.input[start_pos..self.next_pos]),
-                    };
+                    Token::NotEqual
                 } else {
-                    tok = Self::new_token(TokenType::Bang, self.ch);
+                    Token::Bang
                 }
             }
-            b'/' => {
-                tok = Self::new_token(TokenType::Slash, self.ch);
-            }
-            b'*' => {
-                tok = Self::new_token(TokenType::Asterisk, self.ch);
-            }
-            b'<' => {
-                tok = Self::new_token(TokenType::Lt, self.ch);
-            }
-            b'>' => {
-                tok = Self::new_token(TokenType::Gt, self.ch);
-            }
-            b'(' => {
-                tok = Self::new_token(TokenType::Lparen, self.ch);
-            }
-            b')' => {
-                tok = Self::new_token(TokenType::Rparen, self.ch);
-            }
-            b'{' => {
-                tok = Self::new_token(TokenType::Lbrace, self.ch);
-            }
-            b'}' => {
-                tok = Self::new_token(TokenType::Rbrace, self.ch);
-            }
-            b',' => {
-                tok = Self::new_token(TokenType::Comma, self.ch);
-            }
-            b';' => {
-                tok = Self::new_token(TokenType::Semicolon, self.ch);
-            }
+            b'/' => Token::Slash,
+            b'*' => Token::Asterisk,
+            b'<' => Token::LessThan,
+            b'>' => Token::GreaterThan,
+            b'(' => Token::Lparen,
+            b')' => Token::Rparen,
+            b'{' => Token::Lbrace,
+            b'}' => Token::Rbrace,
+            b',' => Token::Comma,
+            b';' => Token::Semicolon,
             b'a'...b'z' | b'A'...b'Z' | b'_' => {
                 return self.consume_identifier();
             }
             b'0'...b'9' => {
                 return self.consume_number();
             }
-            0 => {
-                tok = Token {
-                    token_type: TokenType::Eof,
-                    literal: String::from(""),
-                };
-            }
-            _ => {
-                tok = Self::new_token(TokenType::Illegal, self.ch);
-            }
-        }
+            0 => Token::Eof,
+            _ => Token::Illegal,
+        };
 
         self.read_char();
 
@@ -167,20 +119,15 @@ impl<'a> Lexer<'a> {
 
         let literal = &self.input[start_pos..self.pos];
 
-        let token_type = match literal {
-            "fn" => TokenType::Function,
-            "let" => TokenType::Let,
-            "true" => TokenType::True,
-            "false" => TokenType::False,
-            "if" => TokenType::If,
-            "else" => TokenType::Else,
-            "return" => TokenType::Return,
-            _ => TokenType::Ident,
-        };
-
-        Token {
-            token_type,
-            literal: String::from(literal),
+        match literal {
+            "fn" => Token::Function,
+            "let" => Token::Let,
+            "true" => Token::Bool(true),
+            "false" => Token::Bool(false),
+            "if" => Token::If,
+            "else" => Token::Else,
+            "return" => Token::Return,
+            _ => Token::Ident(String::from(literal)),
         }
     }
 
@@ -198,17 +145,16 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        Token {
-            token_type: TokenType::Int,
-            literal: String::from(&self.input[start_pos..self.pos]),
-        }
+        let literal = &self.input[start_pos..self.pos];
+
+        Token::Int(literal.parse::<i64>().unwrap())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use lexer::Lexer;
-    use token::TokenType;
+    use token::Token;
 
     #[test]
     fn test_next_token() {
@@ -234,89 +180,88 @@ if (5 < 10) {
 "#;
 
         let tests = vec![
-            (TokenType::Let, String::from("let")),
-            (TokenType::Ident, String::from("five")),
-            (TokenType::Assign, String::from("=")),
-            (TokenType::Int, String::from("5")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::Let, String::from("let")),
-            (TokenType::Ident, String::from("ten")),
-            (TokenType::Assign, String::from("=")),
-            (TokenType::Int, String::from("10")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::Let, String::from("let")),
-            (TokenType::Ident, String::from("add")),
-            (TokenType::Assign, String::from("=")),
-            (TokenType::Function, String::from("fn")),
-            (TokenType::Lparen, String::from("(")),
-            (TokenType::Ident, String::from("x")),
-            (TokenType::Comma, String::from(",")),
-            (TokenType::Ident, String::from("y")),
-            (TokenType::Rparen, String::from(")")),
-            (TokenType::Lbrace, String::from("{")),
-            (TokenType::Ident, String::from("x")),
-            (TokenType::Plus, String::from("+")),
-            (TokenType::Ident, String::from("y")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::Rbrace, String::from("}")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::Let, String::from("let")),
-            (TokenType::Ident, String::from("result")),
-            (TokenType::Assign, String::from("=")),
-            (TokenType::Ident, String::from("add")),
-            (TokenType::Lparen, String::from("(")),
-            (TokenType::Ident, String::from("five")),
-            (TokenType::Comma, String::from(",")),
-            (TokenType::Ident, String::from("ten")),
-            (TokenType::Rparen, String::from(")")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::BANG, String::from("!")),
-            (TokenType::MINUS, String::from("-")),
-            (TokenType::Slash, String::from("/")),
-            (TokenType::Asterisk, String::from("*")),
-            (TokenType::Int, String::from("5")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::Int, String::from("5")),
-            (TokenType::Lt, String::from("<")),
-            (TokenType::Int, String::from("10")),
-            (TokenType::Gt, String::from(">")),
-            (TokenType::Int, String::from("5")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::If, String::from("if")),
-            (TokenType::Lparen, String::from("(")),
-            (TokenType::Int, String::from("5")),
-            (TokenType::Lt, String::from("<")),
-            (TokenType::Int, String::from("10")),
-            (TokenType::Rparen, String::from(")")),
-            (TokenType::Lbrace, String::from("{")),
-            (TokenType::Return, String::from("return")),
-            (TokenType::True, String::from("true")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::Rbrace, String::from("}")),
-            (TokenType::Else, String::from("else")),
-            (TokenType::Lbrace, String::from("{")),
-            (TokenType::Return, String::from("return")),
-            (TokenType::False, String::from("false")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::Rbrace, String::from("}")),
-            (TokenType::Int, String::from("10")),
-            (TokenType::Eq, String::from("==")),
-            (TokenType::Int, String::from("10")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::Int, String::from("10")),
-            (TokenType::NotEq, String::from("!=")),
-            (TokenType::Int, String::from("9")),
-            (TokenType::Semicolon, String::from(";")),
-            (TokenType::Eof, String::from("")),
+            Token::Let,
+            Token::Ident(String::from("five")),
+            Token::Assign,
+            Token::Int(5),
+            Token::Semicolon,
+            Token::Let,
+            Token::Ident(String::from("ten")),
+            Token::Assign,
+            Token::Int(10),
+            Token::Semicolon,
+            Token::Let,
+            Token::Ident(String::from("add")),
+            Token::Assign,
+            Token::Function,
+            Token::Lparen,
+            Token::Ident(String::from("x")),
+            Token::Comma,
+            Token::Ident(String::from("y")),
+            Token::Rparen,
+            Token::Lbrace,
+            Token::Ident(String::from("x")),
+            Token::Plus,
+            Token::Ident(String::from("y")),
+            Token::Semicolon,
+            Token::Rbrace,
+            Token::Semicolon,
+            Token::Let,
+            Token::Ident(String::from("result")),
+            Token::Assign,
+            Token::Ident(String::from("add")),
+            Token::Lparen,
+            Token::Ident(String::from("five")),
+            Token::Comma,
+            Token::Ident(String::from("ten")),
+            Token::Rparen,
+            Token::Semicolon,
+            Token::Bang,
+            Token::Minus,
+            Token::Slash,
+            Token::Asterisk,
+            Token::Int(5),
+            Token::Semicolon,
+            Token::Int(5),
+            Token::LessThan,
+            Token::Int(10),
+            Token::GreaterThan,
+            Token::Int(5),
+            Token::Semicolon,
+            Token::If,
+            Token::Lparen,
+            Token::Int(5),
+            Token::LessThan,
+            Token::Int(10),
+            Token::Rparen,
+            Token::Lbrace,
+            Token::Return,
+            Token::Bool(true),
+            Token::Semicolon,
+            Token::Rbrace,
+            Token::Else,
+            Token::Lbrace,
+            Token::Return,
+            Token::Bool(false),
+            Token::Semicolon,
+            Token::Rbrace,
+            Token::Int(10),
+            Token::Equal,
+            Token::Int(10),
+            Token::Semicolon,
+            Token::Int(10),
+            Token::NotEqual,
+            Token::Int(9),
+            Token::Semicolon,
+            Token::Eof,
         ];
 
         let mut lexer = Lexer::new(input);
 
-        for (token_type, literal) in tests {
+        for expect in tests {
             let tok = lexer.next_token();
 
-            assert_eq!(token_type, tok.token_type);
-            assert_eq!(literal, tok.literal);
+            assert_eq!(expect, tok);
         }
     }
 }

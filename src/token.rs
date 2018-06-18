@@ -1,47 +1,40 @@
 #[derive(Debug, Clone, PartialEq)]
-pub enum TokenType {
+pub enum Token {
     Illegal,
     Eof,
 
     // Identifiers + literals
-    Ident,
-    Int,
+    Ident(String),
+    Int(i64),
+    Bool(bool),
+
+    // Statements
+    Assign,
+    If,
+    Else,
 
     // Operators
-    Assign,
     Plus,
     Minus,
     Bang,
     Asterisk,
     Slash,
 
-    Lt,
-    Gt,
-
-    Eq,
-    NotEq,
+    Equal,
+    NotEqual,
+    LessThan,
+    GreaterThan,
 
     // Delimiters
     Comma,
     Semicolon,
-
     Lparen,
     Rparen,
     Lbrace,
     Rbrace,
 
-    // Keywords
+    // Reseved keywords
     Function,
     Let,
-    True,
-    False,
-    If,
-    Else,
     Return,
-}
-
-#[derive(Debug)]
-pub struct Token {
-    pub token_type: TokenType,
-    pub literal: String,
 }
