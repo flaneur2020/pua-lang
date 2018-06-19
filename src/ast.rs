@@ -6,11 +6,21 @@ pub type Program = BlockStmt;
 pub struct Ident(pub String);
 
 #[derive(PartialEq, Debug)]
+pub enum Prefix {
+    Plus,
+    Minus,
+    Not,
+}
+
+#[derive(PartialEq, Debug)]
 pub enum Expr {
-    IdentExpr(Ident),
+    Ident(Ident),
+    Prefix(Prefix, Box<Expr>),
+    Infix(Prefix, Box<Expr>),
 }
 
 #[derive(PartialEq, Debug)]
 pub enum Stmt {
-    LetStmt(Ident, Expr),
+    Let(Ident, Expr),
+    Return(Expr),
 }
