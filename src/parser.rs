@@ -80,16 +80,25 @@ impl<'a> Parser<'a> {
         ));
     }
 
+    fn error_no_prefix_parser(&mut self) {
+        self.errors.push(ParseError::new(
+                ParseErrorKind::UnexpectedToken,
+                format!(
+                    "no prefix parse function for %s found \"{:?}\"",
+                    self.current_token,
+                ),
+        ));
+    }
+
     pub fn parse(&mut self) -> Program {
         let mut program: Program = vec![];
 
         while !self.current_token_is(Token::Eof) {
             match self.parse_stmt() {
                 Some(stmt) => program.push(stmt),
-                None => {
-                    self.bump();
-                }
+                None => {},
             }
+            self.bump();
         }
 
         program
@@ -157,22 +166,44 @@ impl<'a> Parser<'a> {
         match self.current_token {
             Token::Ident(_) => self.parse_expr_ident(),
             Token::Int(_) => self.parse_expr_int(),
-            _ => None
+            Token::Bang => self.parse_expr_prefix(),
+            Token::Minus => self.parse_expr_prefix(),
+            _ => {
+                self.error_no_prefix_parser();
+                None
+            }
         }
     }
 
     fn parse_expr_ident(&mut self) -> Option<Expr> {
         match self.current_token {
-            Token::Ident(ref mut ident) => Some(Expr::Ident(Ident(ident.clone()))), // TODO clone...??
+            Token::Ident(ref mut ident) => Some(Expr::Ident(Ident(ident.clone()))), // FIXME Is `.clone()` correct?
             _ => None
         }
     }
 
     fn parse_expr_int(&mut self) -> Option<Expr> {
         match self.current_token {
-            Token::Int(ref mut int) => Some(Expr::Literal(Literal::Int(int.clone()))), // TODO clone...??
+            Token::Int(ref mut int) => Some(Expr::Literal(Literal::Int(int.clone()))), // FIXME Is `.clone()` correct?
             _ => None
         }
+    }
+
+    fn parse_expr_prefix(&mut self) -> Option<Expr> {
+        let prefix = match self.current_token {
+            Token::Bang => Prefix::Not,
+            Token::Minus => Prefix::Minus,
+            _ => return None,
+        };
+
+        self.bump();
+
+        let right = match self.parse_expr(Precedence::Prefix) {
+            Some(expr) => expr,
+            None => return None,
+        };
+
+        Some(Expr::Prefix(prefix, Box::new(right)))
     }
 }
 
@@ -301,5 +332,22 @@ return 993322;
             Stmt::Expr(Expr::Literal(Literal::Int(5))),
             program[0],
         );
+    }
+
+    #[test]
+    fn test_prefix_expr() {
+        let tests = vec![
+            ("!5;", Stmt::Expr(Expr::Prefix(Prefix::Not, Box::new(Expr::Literal(Literal::Int(5)))))),
+            ("-15;", Stmt::Expr(Expr::Prefix(Prefix::Minus, Box::new(Expr::Literal(Literal::Int(15)))))),
+        ];
+
+        for (input, expect) in tests {
+            let mut parser = Parser::new(Lexer::new(input));
+            let program = parser.parse();
+
+            check_parse_errors(&mut parser);
+            assert_eq!(1, program.len());
+            assert_eq!(expect, program[0]);
+        }
     }
 }
