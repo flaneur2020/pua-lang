@@ -23,7 +23,9 @@ pub enum Token {
     Equal,
     NotEqual,
     LessThan,
+    LessThanEqual,
     GreaterThan,
+    GreaterThanEqual,
 
     // Delimiters
     Comma,

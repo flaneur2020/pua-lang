@@ -80,8 +80,22 @@ impl<'a> Lexer<'a> {
             }
             b'/' => Token::Slash,
             b'*' => Token::Asterisk,
-            b'<' => Token::LessThan,
-            b'>' => Token::GreaterThan,
+            b'<' => {
+                if self.nextch_is(b'=') {
+                    self.read_char();
+                    Token::LessThanEqual
+                } else {
+                    Token::LessThan
+                }
+            }
+            b'>' => {
+                if self.nextch_is(b'=') {
+                    self.read_char();
+                    Token::GreaterThanEqual
+                } else {
+                    Token::GreaterThan
+                }
+            }
             b'(' => Token::Lparen,
             b')' => Token::Rparen,
             b'{' => Token::Lbrace,
@@ -177,6 +191,8 @@ if (5 < 10) {
 
 10 == 10;
 10 != 9;
+10 <= 10;
+10 >= 10;
 "#;
 
         let tests = vec![
@@ -252,6 +268,14 @@ if (5 < 10) {
             Token::Int(10),
             Token::NotEqual,
             Token::Int(9),
+            Token::Semicolon,
+            Token::Int(10),
+            Token::LessThanEqual,
+            Token::Int(10),
+            Token::Semicolon,
+            Token::Int(10),
+            Token::GreaterThanEqual,
+            Token::Int(10),
             Token::Semicolon,
             Token::Eof,
         ];

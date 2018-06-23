@@ -29,7 +29,7 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(lexer: Lexer<'a>) -> Self {
+    pub fn new(lexer: Lexer<'a>) -> Self {
         let mut parser = Parser {
             lexer,
             current_token: Token::Eof,
@@ -41,6 +41,17 @@ impl<'a> Parser<'a> {
         parser.bump();
 
         parser
+    }
+
+    fn token_to_precedence(tok: &Token) -> Precedence {
+        match tok {
+            Token::Equal | Token::NotEqual => Precedence::Equals,
+            Token::LessThan | Token::LessThanEqual => Precedence::LessGreater,
+            Token::GreaterThan | Token::GreaterThanEqual => Precedence::LessGreater,
+            Token::Plus | Token::Minus => Precedence::Sum,
+            Token::Slash | Token::Asterisk => Precedence::Product,
+            _ => Precedence::Lowest
+        }
     }
 
     pub fn get_errors(&mut self) -> ParseErrors {
@@ -68,6 +79,14 @@ impl<'a> Parser<'a> {
             self.error_next_token(tok);
             return false;
         }
+    }
+
+    fn current_token_precedence(&mut self) -> Precedence {
+        Self::token_to_precedence(&self.current_token)
+    }
+
+    fn next_token_precedence(&mut self) -> Precedence {
+        Self::token_to_precedence(&self.next_token)
     }
 
     fn error_next_token(&mut self, tok: Token) {
@@ -163,16 +182,38 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expr(&mut self, precedence: Precedence) -> Option<Expr> {
-        match self.current_token {
+        // prefix
+        let mut left = match self.current_token {
             Token::Ident(_) => self.parse_expr_ident(),
             Token::Int(_) => self.parse_expr_int(),
-            Token::Bang => self.parse_expr_prefix(),
-            Token::Minus => self.parse_expr_prefix(),
+            Token::Bang | Token::Minus => self.parse_expr_prefix(),
             _ => {
                 self.error_no_prefix_parser();
-                None
+                return None;
+            }
+        };
+
+        // infix
+        while !self.next_token_is(Token::Semicolon) && precedence < self.next_token_precedence() {
+            match self.next_token {
+                Token::Plus
+                    | Token::Minus
+                    | Token::Slash
+                    | Token::Asterisk
+                    | Token::Equal
+                    | Token::NotEqual
+                    | Token::LessThan
+                    | Token::LessThanEqual
+                    | Token::GreaterThan
+                    | Token::GreaterThanEqual => {
+                        self.bump();
+                        left = self.parse_expr_infix(left.unwrap());
+                    },
+                _ => return left,
             }
         }
+
+        left
     }
 
     fn parse_expr_ident(&mut self) -> Option<Expr> {
@@ -204,6 +245,33 @@ impl<'a> Parser<'a> {
         };
 
         Some(Expr::Prefix(prefix, Box::new(right)))
+    }
+
+    fn parse_expr_infix(&mut self, left: Expr) -> Option<Expr> {
+        let infix = match self.current_token {
+            Token::Plus => Infix::Plus,
+            Token::Minus => Infix::Minus,
+            Token::Slash => Infix::Divide,
+            Token::Asterisk => Infix::Multiply,
+            Token::Equal => Infix::Equal,
+            Token::NotEqual => Infix::NotEqual,
+            Token::LessThan => Infix::LessThan,
+            Token::LessThanEqual => Infix::LessThanEqual,
+            Token::GreaterThan => Infix::GreaterThan,
+            Token::GreaterThanEqual => Infix::GreaterThanEqual,
+            _ => return None,
+        };
+
+        let precedence = self.current_token_precedence();
+
+        self.bump();
+
+        let right = match self.parse_expr(precedence) {
+            Some(expr) => expr,
+            None => return None,
+        };
+
+        Some(Expr::Infix(infix, Box::new(left), Box::new(right)))
     }
 }
 
@@ -346,6 +414,315 @@ return 993322;
             let program = parser.parse();
 
             check_parse_errors(&mut parser);
+            assert_eq!(1, program.len());
+            assert_eq!(expect, program[0]);
+        }
+    }
+
+    #[test]
+    fn test_infix_expr() {
+        let tests = vec![
+            ("5 + 5;", Stmt::Expr(Expr::Infix(
+                Infix::Plus,
+                Box::new(Expr::Literal(Literal::Int(5))),
+                Box::new(Expr::Literal(Literal::Int(5))),
+            ))),
+            ("5 - 5;", Stmt::Expr(Expr::Infix(
+                Infix::Minus,
+                Box::new(Expr::Literal(Literal::Int(5))),
+                Box::new(Expr::Literal(Literal::Int(5))),
+            ))),
+            ("5 * 5;", Stmt::Expr(Expr::Infix(
+                Infix::Multiply,
+                Box::new(Expr::Literal(Literal::Int(5))),
+                Box::new(Expr::Literal(Literal::Int(5))),
+            ))),
+            ("5 / 5;", Stmt::Expr(Expr::Infix(
+                Infix::Divide,
+                Box::new(Expr::Literal(Literal::Int(5))),
+                Box::new(Expr::Literal(Literal::Int(5))),
+            ))),
+            ("5 > 5;", Stmt::Expr(Expr::Infix(
+                Infix::GreaterThan,
+                Box::new(Expr::Literal(Literal::Int(5))),
+                Box::new(Expr::Literal(Literal::Int(5))),
+            ))),
+            ("5 < 5;", Stmt::Expr(Expr::Infix(
+                Infix::LessThan,
+                Box::new(Expr::Literal(Literal::Int(5))),
+                Box::new(Expr::Literal(Literal::Int(5))),
+            ))),
+            ("5 == 5;", Stmt::Expr(Expr::Infix(
+                Infix::Equal,
+                Box::new(Expr::Literal(Literal::Int(5))),
+                Box::new(Expr::Literal(Literal::Int(5))),
+            ))),
+            ("5 != 5;", Stmt::Expr(Expr::Infix(
+                Infix::NotEqual,
+                Box::new(Expr::Literal(Literal::Int(5))),
+                Box::new(Expr::Literal(Literal::Int(5))),
+            ))),
+            ("5 >= 5;", Stmt::Expr(Expr::Infix(
+                Infix::GreaterThanEqual,
+                Box::new(Expr::Literal(Literal::Int(5))),
+                Box::new(Expr::Literal(Literal::Int(5))),
+            ))),
+            ("5 <= 5;", Stmt::Expr(Expr::Infix(
+                Infix::LessThanEqual,
+                Box::new(Expr::Literal(Literal::Int(5))),
+                Box::new(Expr::Literal(Literal::Int(5))),
+            ))),
+        ];
+
+        for (input, expect) in tests {
+            let mut parser = Parser::new(Lexer::new(input));
+            let program = parser.parse();
+
+            check_parse_errors(&mut parser);
+
+            assert_eq!(1, program.len());
+            assert_eq!(expect, program[0]);
+        }
+    }
+
+    #[test]
+    fn test_operator_precedence_parsing() {
+        let tests = vec![
+            ("-a * b", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Multiply,
+                    Box::new(Expr::Prefix(Prefix::Minus, Box::new(Expr::Ident(Ident(String::from("a")))))),
+                    Box::new(Expr::Ident(Ident(String::from("b")))),
+                ),
+            )),
+            ("!-a", Stmt::Expr(
+                Expr::Prefix(
+                    Prefix::Not,
+                    Box::new(
+                        Expr::Prefix(
+                            Prefix::Minus,
+                            Box::new(Expr::Ident(Ident(String::from("a")))),
+                        ),
+                    ),
+                ),
+            )),
+            ("a + b + c", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Plus,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Ident(Ident(String::from("a")))),
+                            Box::new(Expr::Ident(Ident(String::from("b")))),
+                        ),
+                    ),
+                    Box::new(Expr::Ident(Ident(String::from("c")))),
+                ),
+            )),
+            ("a + b - c", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Minus,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Ident(Ident(String::from("a")))),
+                            Box::new(Expr::Ident(Ident(String::from("b")))),
+                        ),
+                    ),
+                    Box::new(Expr::Ident(Ident(String::from("c")))),
+                ),
+            )),
+            ("a * b * c", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Multiply,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Multiply,
+                            Box::new(Expr::Ident(Ident(String::from("a")))),
+                            Box::new(Expr::Ident(Ident(String::from("b")))),
+                        ),
+                    ),
+                    Box::new(Expr::Ident(Ident(String::from("c")))),
+                ),
+            )),
+            ("a * b / c", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Divide,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Multiply,
+                            Box::new(Expr::Ident(Ident(String::from("a")))),
+                            Box::new(Expr::Ident(Ident(String::from("b")))),
+                        ),
+                    ),
+                    Box::new(Expr::Ident(Ident(String::from("c")))),
+                ),
+            )),
+            ("a + b / c", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Plus,
+                    Box::new(Expr::Ident(Ident(String::from("a")))),
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Divide,
+                            Box::new(Expr::Ident(Ident(String::from("b")))),
+                            Box::new(Expr::Ident(Ident(String::from("c")))),
+                        ),
+                    ),
+                ),
+            )),
+            ("a + b * c + d / e - f", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Minus,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(
+                                Expr::Infix(
+                                    Infix::Plus,
+                                    Box::new(Expr::Ident(Ident(String::from("a")))),
+                                    Box::new(
+                                        Expr::Infix(
+                                            Infix::Multiply,
+                                            Box::new(Expr::Ident(Ident(String::from("b")))),
+                                            Box::new(Expr::Ident(Ident(String::from("c")))),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            Box::new(
+                                Expr::Infix(
+                                    Infix::Divide,
+                                    Box::new(Expr::Ident(Ident(String::from("d")))),
+                                    Box::new(Expr::Ident(Ident(String::from("e")))),
+                                ),
+                            ),
+                        ),
+                    ),
+                    Box::new(Expr::Ident(Ident(String::from("f")))),
+                ),
+            )),
+            ("5 > 4 == 3 < 4", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Equal,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::GreaterThan,
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                        ),
+                    ),
+                    Box::new(
+                        Expr::Infix(
+                            Infix::LessThan,
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                        ),
+                    ),
+                ),
+            )),
+            ("5 < 4 != 3 > 4", Stmt::Expr(
+                Expr::Infix(
+                    Infix::NotEqual,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::LessThan,
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                        ),
+                    ),
+                    Box::new(
+                        Expr::Infix(
+                            Infix::GreaterThan,
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                        ),
+                    ),
+                ),
+            )),
+            ("5 >= 4 == 3 <= 4", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Equal,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::GreaterThanEqual,
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                        ),
+                    ),
+                    Box::new(
+                        Expr::Infix(
+                            Infix::LessThanEqual,
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                        ),
+                    ),
+                ),
+            )),
+            ("5 <= 4 != 3 >= 4", Stmt::Expr(
+                Expr::Infix(
+                    Infix::NotEqual,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::LessThanEqual,
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                        ),
+                    ),
+                    Box::new(
+                        Expr::Infix(
+                            Infix::GreaterThanEqual,
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                        ),
+                    ),
+                ),
+            )),
+            ("3 + 4 * 5 == 3 * 1 + 4 * 5", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Equal,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                            Box::new(
+                                Expr::Infix(
+                                    Infix::Multiply,
+                                    Box::new(Expr::Literal(Literal::Int(4))),
+                                    Box::new(Expr::Literal(Literal::Int(5))),
+                                ),
+                            ),
+                        ),
+                    ),
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(
+                                Expr::Infix(
+                                    Infix::Multiply,
+                                    Box::new(Expr::Literal(Literal::Int(3))),
+                                    Box::new(Expr::Literal(Literal::Int(1))),
+                                ),
+                            ),
+                            Box::new(
+                                Expr::Infix(
+                                    Infix::Multiply,
+                                    Box::new(Expr::Literal(Literal::Int(4))),
+                                    Box::new(Expr::Literal(Literal::Int(5))),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )),
+        ];
+
+        for (input, expect) in tests {
+            let mut parser = Parser::new(Lexer::new(input));
+            let program = parser.parse();
+
+            check_parse_errors(&mut parser);
+
             assert_eq!(1, program.len());
             assert_eq!(expect, program[0]);
         }

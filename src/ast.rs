@@ -13,11 +13,25 @@ pub enum Prefix {
 }
 
 #[derive(PartialEq, Debug)]
+pub enum Infix {
+    Plus,
+    Minus,
+    Divide,
+    Multiply,
+    Equal,
+    NotEqual,
+    GreaterThanEqual,
+    GreaterThan,
+    LessThanEqual,
+    LessThan,
+}
+
+#[derive(PartialEq, Debug)]
 pub enum Expr {
     Ident(Ident),
     Literal(Literal),
     Prefix(Prefix, Box<Expr>),
-    Infix(Prefix, Box<Expr>),
+    Infix(Infix, Box<Expr>, Box<Expr>),
 }
 
 #[derive(PartialEq, Debug)]
