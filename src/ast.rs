@@ -33,6 +33,10 @@ pub enum Expr {
         consequence: BlockStmt,
         alternative: Option<BlockStmt>,
     },
+    Func {
+        params: Vec<Ident>,
+        body: BlockStmt,
+    },
 }
 
 #[derive(PartialEq, Debug)]

@@ -36,7 +36,7 @@ pub enum Token {
     Rbrace,
 
     // Reseved keywords
-    Function,
+    Func,
     Let,
     Return,
 }

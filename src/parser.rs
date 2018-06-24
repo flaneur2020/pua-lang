@@ -206,6 +206,7 @@ impl<'a> Parser<'a> {
             Token::Bang | Token::Minus => self.parse_prefix_expr(),
             Token::Lparen => self.parse_grouped_expr(),
             Token::If => self.parse_if_expr(),
+            Token::Func => self.parse_func_expr(),
             _ => {
                 self.error_no_prefix_parser();
                 return None;
@@ -235,10 +236,17 @@ impl<'a> Parser<'a> {
         left
     }
 
-    fn parse_ident_expr(&mut self) -> Option<Expr> {
+    fn parse_ident(&mut self) -> Option<Ident> {
         match self.current_token {
-            Token::Ident(ref mut ident) => Some(Expr::Ident(Ident(ident.clone()))), // FIXME Is `.clone()` correct?
+            Token::Ident(ref mut ident) => Some(Ident(ident.clone())), // FIXME Is `.clone()` correct?
             _ => None
+        }
+    }
+
+    fn parse_ident_expr(&mut self) -> Option<Expr> {
+        match self.parse_ident() {
+            Some(ident) => Some(Expr::Ident(ident)),
+            None => None,
         }
     }
 
@@ -346,6 +354,62 @@ impl<'a> Parser<'a> {
             consequence,
             alternative,
         })
+    }
+
+    fn parse_func_expr(&mut self) -> Option<Expr> {
+        if !self.expect_next_token(Token::Lparen) {
+            return None;
+        }
+
+        let params = match self.parse_func_params() {
+            Some(params) => params,
+            None => return None,
+        };
+
+        if !self.expect_next_token(Token::Lbrace) {
+            return None;
+        }
+
+        Some(Expr::Func {
+            params,
+            body: self.parse_block_stmt(),
+        })
+    }
+
+    fn parse_func_params(&mut self) -> Option<Vec<Ident>> {
+        let mut params = vec![];
+
+        if self.next_token_is(Token::Rparen) {
+            self.bump();
+            return Some(params);
+        }
+
+        self.bump();
+
+        let ident = match self.parse_ident() {
+            Some(ident) => ident,
+            None => return None,
+        };
+
+        params.push(ident);
+
+        while self.next_token_is(Token::Comma) {
+            self.bump();
+            self.bump();
+
+            let ident = match self.parse_ident() {
+                Some(ident) => ident,
+                None => return None,
+            };
+
+            params.push(ident);
+        }
+
+        if !self.expect_next_token(Token::Rparen) {
+            return None;
+        }
+
+        Some(params)
     }
 }
 
@@ -612,6 +676,64 @@ return 993322;
             ),
             program[0],
         );
+    }
+
+    #[test]
+    fn test_func_expr() {
+        let input = "fn(x, y) { x + y; }";
+
+        let mut parser = Parser::new(Lexer::new(input));
+        let program = parser.parse();
+
+        check_parse_errors(&mut parser);
+        assert_eq!(1, program.len());
+        assert_eq!(
+            Stmt::Expr(
+                Expr::Func {
+                    params: vec![
+                        Ident(String::from("x")),
+                        Ident(String::from("y")),
+                    ],
+                    body: vec![
+                        Stmt::Expr(
+                            Expr::Infix(
+                                Infix::Plus,
+                                Box::new(Expr::Ident(Ident(String::from("x")))),
+                                Box::new(Expr::Ident(Ident(String::from("y")))),
+                            ),
+                        ),
+                    ],
+                },
+            ),
+            program[0],
+        );
+    }
+
+    #[test]
+    fn test_func_params() {
+        let tests = vec![
+            ("fn() {};", vec![
+            ]),
+            ("fn(x) {};", vec![
+                Ident(String::from("x")),
+            ]),
+            ("fn(x, y, z) {};", vec![
+                Ident(String::from("x")),
+                Ident(String::from("y")),
+                Ident(String::from("z")),
+            ]),
+        ];
+
+        for (input, expect) in tests {
+            let mut parser = Parser::new(Lexer::new(input));
+            let program = parser.parse();
+
+            check_parse_errors(&mut parser);
+            assert_eq!(Stmt::Expr(Expr::Func {
+                params: expect,
+                body: vec![],
+            }), program[0]);
+        }
     }
 
     #[test]
