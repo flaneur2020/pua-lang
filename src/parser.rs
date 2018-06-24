@@ -186,6 +186,7 @@ impl<'a> Parser<'a> {
         let mut left = match self.current_token {
             Token::Ident(_) => self.parse_expr_ident(),
             Token::Int(_) => self.parse_expr_int(),
+            Token::Bool(_) => self.parse_expr_bool(),
             Token::Bang | Token::Minus => self.parse_expr_prefix(),
             _ => {
                 self.error_no_prefix_parser();
@@ -226,6 +227,13 @@ impl<'a> Parser<'a> {
     fn parse_expr_int(&mut self) -> Option<Expr> {
         match self.current_token {
             Token::Int(ref mut int) => Some(Expr::Literal(Literal::Int(int.clone()))), // FIXME Is `.clone()` correct?
+            _ => None
+        }
+    }
+
+    fn parse_expr_bool(&mut self) -> Option<Expr> {
+        match self.current_token {
+            Token::Bool(value) => Some(Expr::Literal(Literal::Bool(value == true))),
             _ => None
         }
     }
@@ -376,13 +384,8 @@ return 993322;
         let program = parser.parse();
 
         check_parse_errors(&mut parser);
-
         assert_eq!(1, program.len());
-
-        assert_eq!(
-            Stmt::Expr(Expr::Ident(Ident(String::from("foobar")))),
-            program[0],
-        );
+        assert_eq!(Stmt::Expr(Expr::Ident(Ident(String::from("foobar")))), program[0]);
     }
 
     #[test]
@@ -393,13 +396,25 @@ return 993322;
         let program = parser.parse();
 
         check_parse_errors(&mut parser);
-
         assert_eq!(1, program.len());
+        assert_eq!(Stmt::Expr(Expr::Literal(Literal::Int(5))), program[0]);
+    }
 
-        assert_eq!(
-            Stmt::Expr(Expr::Literal(Literal::Int(5))),
-            program[0],
-        );
+    #[test]
+    fn test_boolean_literal_expr() {
+        let tests = vec![
+            ("true;", Stmt::Expr(Expr::Literal(Literal::Bool(true)))),
+            ("false;", Stmt::Expr(Expr::Literal(Literal::Bool(false)))),
+        ];
+
+        for (input, expect) in tests {
+            let mut parser = Parser::new(Lexer::new(input));
+            let program = parser.parse();
+
+            check_parse_errors(&mut parser);
+            assert_eq!(1, program.len());
+            assert_eq!(expect, program[0]);
+        }
     }
 
     #[test]
@@ -713,6 +728,38 @@ return 993322;
                             ),
                         ),
                     ),
+                ),
+            )),
+            ("true", Stmt::Expr(
+                Expr::Literal(Literal::Bool(true)),
+            )),
+            ("false", Stmt::Expr(
+                Expr::Literal(Literal::Bool(false)),
+            )),
+            ("3 > 5 == false", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Equal,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::GreaterThan,
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                        ),
+                    ),
+                    Box::new(Expr::Literal(Literal::Bool(false))),
+                ),
+            )),
+            ("3 < 5 == true", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Equal,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::LessThan,
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                        ),
+                    ),
+                    Box::new(Expr::Literal(Literal::Bool(true))),
                 ),
             )),
         ];
