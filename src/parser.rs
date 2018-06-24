@@ -188,6 +188,7 @@ impl<'a> Parser<'a> {
             Token::Int(_) => self.parse_expr_int(),
             Token::Bool(_) => self.parse_expr_bool(),
             Token::Bang | Token::Minus => self.parse_expr_prefix(),
+            Token::Lparen => self.parse_expr_grouped(),
             _ => {
                 self.error_no_prefix_parser();
                 return None;
@@ -253,6 +254,18 @@ impl<'a> Parser<'a> {
         };
 
         Some(Expr::Prefix(prefix, Box::new(right)))
+    }
+
+    fn parse_expr_grouped(&mut self) -> Option<Expr> {
+        self.bump();
+
+        let expr = self.parse_expr(Precedence::Lowest);
+
+        if !self.expect_next_token(Token::Rparen) {
+            None
+        } else {
+            expr
+        }
     }
 
     fn parse_expr_infix(&mut self, left: Expr) -> Option<Expr> {
@@ -760,6 +773,75 @@ return 993322;
                         ),
                     ),
                     Box::new(Expr::Literal(Literal::Bool(true))),
+                ),
+            )),
+            ("1 + (2 + 3) + 4", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Plus,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Literal(Literal::Int(1))),
+                            Box::new(
+                                Expr::Infix(
+                                    Infix::Plus,
+                                    Box::new(Expr::Literal(Literal::Int(2))),
+                                    Box::new(Expr::Literal(Literal::Int(3))),
+                                ),
+                            ),
+                        ),
+                    ),
+                    Box::new(Expr::Literal(Literal::Int(4))),
+                ),
+            )),
+            ("(5 + 5) * 2", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Multiply,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                        ),
+                    ),
+                    Box::new(Expr::Literal(Literal::Int(2))),
+                ),
+            )),
+            ("2 / (5 + 5)", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Divide,
+                    Box::new(Expr::Literal(Literal::Int(2))),
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                        ),
+                    ),
+                ),
+            )),
+            ("-(5 + 5)", Stmt::Expr(
+                Expr::Prefix(
+                    Prefix::Minus,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                        ),
+                    ),
+                ),
+            )),
+            ("!(true == true)", Stmt::Expr(
+                Expr::Prefix(
+                    Prefix::Not,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Equal,
+                            Box::new(Expr::Literal(Literal::Bool(true))),
+                            Box::new(Expr::Literal(Literal::Bool(true))),
+                        ),
+                    ),
                 ),
             )),
         ];
