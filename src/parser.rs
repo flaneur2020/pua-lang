@@ -123,6 +123,22 @@ impl<'a> Parser<'a> {
         program
     }
 
+    fn parse_block_stmt(&mut self) -> BlockStmt {
+        self.bump();
+
+        let mut block = vec![];
+
+        while !self.current_token_is(Token::Rbrace) && !self.current_token_is(Token::Eof) {
+            match self.parse_stmt() {
+                Some(stmt) => block.push(stmt),
+                None => {},
+            }
+            self.bump();
+        }
+
+        block
+    }
+
     fn parse_stmt(&mut self) -> Option<Stmt> {
         match self.current_token {
             Token::Let => self.parse_let_stmt(),
@@ -189,6 +205,7 @@ impl<'a> Parser<'a> {
             Token::Bool(_) => self.parse_expr_bool(),
             Token::Bang | Token::Minus => self.parse_expr_prefix(),
             Token::Lparen => self.parse_expr_grouped(),
+            Token::If => self.parse_expr_if(),
             _ => {
                 self.error_no_prefix_parser();
                 return None;
@@ -266,6 +283,42 @@ impl<'a> Parser<'a> {
         } else {
             expr
         }
+    }
+
+    fn parse_expr_if(&mut self) -> Option<Expr> {
+        if !self.expect_next_token(Token::Lparen) {
+            return None;
+        }
+
+        self.bump();
+
+        let cond = match self.parse_expr(Precedence::Lowest) {
+            Some(expr) => expr,
+            None => return None,
+        };
+
+        if !self.expect_next_token(Token::Rparen) || !self.expect_next_token(Token::Lbrace) {
+            return None;
+        }
+
+        let consequence = self.parse_block_stmt();
+        let mut alternative = None;
+
+        if self.next_token_is(Token::Else) {
+            self.bump();
+
+            if !self.expect_next_token(Token::Lbrace) {
+                return None;
+            }
+
+            alternative = Some(self.parse_block_stmt());
+        }
+
+        Some(Expr::If {
+            cond: Box::new(cond),
+            consequence,
+            alternative,
+        })
     }
 
     fn parse_expr_infix(&mut self, left: Expr) -> Option<Expr> {
@@ -511,6 +564,54 @@ return 993322;
             assert_eq!(1, program.len());
             assert_eq!(expect, program[0]);
         }
+    }
+
+    #[test]
+    fn test_if_expr() {
+        let input = "if (x < y) { x }";
+
+        let mut parser = Parser::new(Lexer::new(input));
+        let program = parser.parse();
+
+        check_parse_errors(&mut parser);
+        assert_eq!(1, program.len());
+        assert_eq!(
+            Stmt::Expr(
+                Expr::If {
+                    cond: Box::new(Expr::Infix(Infix::LessThan, Box::new(Expr::Ident(Ident(String::from("x")))), Box::new(Expr::Ident(Ident(String::from("y")))))),
+                    consequence: vec![
+                        Stmt::Expr(Expr::Ident(Ident(String::from("x")))),
+                    ],
+                    alternative: None,
+                },
+            ),
+            program[0],
+        );
+    }
+
+    #[test]
+    fn test_if_else_expr() {
+        let input = "if (x < y) { x } else { y }";
+
+        let mut parser = Parser::new(Lexer::new(input));
+        let program = parser.parse();
+
+        check_parse_errors(&mut parser);
+        assert_eq!(1, program.len());
+        assert_eq!(
+            Stmt::Expr(
+                Expr::If {
+                    cond: Box::new(Expr::Infix(Infix::LessThan, Box::new(Expr::Ident(Ident(String::from("x")))), Box::new(Expr::Ident(Ident(String::from("y")))))),
+                    consequence: vec![
+                        Stmt::Expr(Expr::Ident(Ident(String::from("x")))),
+                    ],
+                    alternative: Some(vec![
+                        Stmt::Expr(Expr::Ident(Ident(String::from("y"))))
+                    ]),
+                },
+            ),
+            program[0],
+        );
     }
 
     #[test]

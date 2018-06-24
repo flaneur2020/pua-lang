@@ -1,7 +1,3 @@
-pub type BlockStmt = Vec<Stmt>;
-
-pub type Program = BlockStmt;
-
 #[derive(PartialEq, Debug)]
 pub struct Ident(pub String);
 
@@ -32,6 +28,11 @@ pub enum Expr {
     Literal(Literal),
     Prefix(Prefix, Box<Expr>),
     Infix(Infix, Box<Expr>, Box<Expr>),
+    If {
+        cond: Box<Expr>,
+        consequence: BlockStmt,
+        alternative: Option<BlockStmt>,
+    },
 }
 
 #[derive(PartialEq, Debug)]
@@ -46,6 +47,10 @@ pub enum Stmt {
     Return(Expr),
     Expr(Expr),
 }
+
+pub type BlockStmt = Vec<Stmt>;
+
+pub type Program = BlockStmt;
 
 #[derive(PartialEq, PartialOrd, Debug)]
 pub enum Precedence {
