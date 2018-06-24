@@ -200,12 +200,12 @@ impl<'a> Parser<'a> {
     fn parse_expr(&mut self, precedence: Precedence) -> Option<Expr> {
         // prefix
         let mut left = match self.current_token {
-            Token::Ident(_) => self.parse_expr_ident(),
-            Token::Int(_) => self.parse_expr_int(),
-            Token::Bool(_) => self.parse_expr_bool(),
-            Token::Bang | Token::Minus => self.parse_expr_prefix(),
-            Token::Lparen => self.parse_expr_grouped(),
-            Token::If => self.parse_expr_if(),
+            Token::Ident(_) => self.parse_ident_expr(),
+            Token::Int(_) => self.parse_int_expr(),
+            Token::Bool(_) => self.parse_bool_expr(),
+            Token::Bang | Token::Minus => self.parse_prefix_expr(),
+            Token::Lparen => self.parse_grouped_expr(),
+            Token::If => self.parse_if_expr(),
             _ => {
                 self.error_no_prefix_parser();
                 return None;
@@ -226,7 +226,7 @@ impl<'a> Parser<'a> {
                     | Token::GreaterThan
                     | Token::GreaterThanEqual => {
                         self.bump();
-                        left = self.parse_expr_infix(left.unwrap());
+                        left = self.parse_infix_expr(left.unwrap());
                     },
                 _ => return left,
             }
@@ -235,28 +235,28 @@ impl<'a> Parser<'a> {
         left
     }
 
-    fn parse_expr_ident(&mut self) -> Option<Expr> {
+    fn parse_ident_expr(&mut self) -> Option<Expr> {
         match self.current_token {
             Token::Ident(ref mut ident) => Some(Expr::Ident(Ident(ident.clone()))), // FIXME Is `.clone()` correct?
             _ => None
         }
     }
 
-    fn parse_expr_int(&mut self) -> Option<Expr> {
+    fn parse_int_expr(&mut self) -> Option<Expr> {
         match self.current_token {
             Token::Int(ref mut int) => Some(Expr::Literal(Literal::Int(int.clone()))), // FIXME Is `.clone()` correct?
             _ => None
         }
     }
 
-    fn parse_expr_bool(&mut self) -> Option<Expr> {
+    fn parse_bool_expr(&mut self) -> Option<Expr> {
         match self.current_token {
             Token::Bool(value) => Some(Expr::Literal(Literal::Bool(value == true))),
             _ => None
         }
     }
 
-    fn parse_expr_prefix(&mut self) -> Option<Expr> {
+    fn parse_prefix_expr(&mut self) -> Option<Expr> {
         let prefix = match self.current_token {
             Token::Bang => Prefix::Not,
             Token::Minus => Prefix::Minus,
@@ -273,7 +273,34 @@ impl<'a> Parser<'a> {
         Some(Expr::Prefix(prefix, Box::new(right)))
     }
 
-    fn parse_expr_grouped(&mut self) -> Option<Expr> {
+    fn parse_infix_expr(&mut self, left: Expr) -> Option<Expr> {
+        let infix = match self.current_token {
+            Token::Plus => Infix::Plus,
+            Token::Minus => Infix::Minus,
+            Token::Slash => Infix::Divide,
+            Token::Asterisk => Infix::Multiply,
+            Token::Equal => Infix::Equal,
+            Token::NotEqual => Infix::NotEqual,
+            Token::LessThan => Infix::LessThan,
+            Token::LessThanEqual => Infix::LessThanEqual,
+            Token::GreaterThan => Infix::GreaterThan,
+            Token::GreaterThanEqual => Infix::GreaterThanEqual,
+            _ => return None,
+        };
+
+        let precedence = self.current_token_precedence();
+
+        self.bump();
+
+        let right = match self.parse_expr(precedence) {
+            Some(expr) => expr,
+            None => return None,
+        };
+
+        Some(Expr::Infix(infix, Box::new(left), Box::new(right)))
+    }
+
+    fn parse_grouped_expr(&mut self) -> Option<Expr> {
         self.bump();
 
         let expr = self.parse_expr(Precedence::Lowest);
@@ -285,7 +312,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_expr_if(&mut self) -> Option<Expr> {
+    fn parse_if_expr(&mut self) -> Option<Expr> {
         if !self.expect_next_token(Token::Lparen) {
             return None;
         }
@@ -319,33 +346,6 @@ impl<'a> Parser<'a> {
             consequence,
             alternative,
         })
-    }
-
-    fn parse_expr_infix(&mut self, left: Expr) -> Option<Expr> {
-        let infix = match self.current_token {
-            Token::Plus => Infix::Plus,
-            Token::Minus => Infix::Minus,
-            Token::Slash => Infix::Divide,
-            Token::Asterisk => Infix::Multiply,
-            Token::Equal => Infix::Equal,
-            Token::NotEqual => Infix::NotEqual,
-            Token::LessThan => Infix::LessThan,
-            Token::LessThanEqual => Infix::LessThanEqual,
-            Token::GreaterThan => Infix::GreaterThan,
-            Token::GreaterThanEqual => Infix::GreaterThanEqual,
-            _ => return None,
-        };
-
-        let precedence = self.current_token_precedence();
-
-        self.bump();
-
-        let right = match self.parse_expr(precedence) {
-            Some(expr) => expr,
-            None => return None,
-        };
-
-        Some(Expr::Infix(infix, Box::new(left), Box::new(right)))
     }
 }
 
