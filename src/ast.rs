@@ -37,6 +37,10 @@ pub enum Expr {
         params: Vec<Ident>,
         body: BlockStmt,
     },
+    Call {
+        func: Box<Expr>,
+        args: Vec<Expr>,
+    },
 }
 
 #[derive(PartialEq, Debug)]

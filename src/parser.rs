@@ -50,6 +50,7 @@ impl<'a> Parser<'a> {
             Token::GreaterThan | Token::GreaterThanEqual => Precedence::LessGreater,
             Token::Plus | Token::Minus => Precedence::Sum,
             Token::Slash | Token::Asterisk => Precedence::Product,
+            Token::Lparen => Precedence::Call,
             _ => Precedence::Lowest
         }
     }
@@ -229,6 +230,10 @@ impl<'a> Parser<'a> {
                         self.bump();
                         left = self.parse_infix_expr(left.unwrap());
                     },
+                Token::Lparen => {
+                    self.bump();
+                    left = self.parse_call_expr(left.unwrap());
+                }
                 _ => return left,
             }
         }
@@ -273,12 +278,10 @@ impl<'a> Parser<'a> {
 
         self.bump();
 
-        let right = match self.parse_expr(Precedence::Prefix) {
-            Some(expr) => expr,
-            None => return None,
-        };
-
-        Some(Expr::Prefix(prefix, Box::new(right)))
+        match self.parse_expr(Precedence::Prefix) {
+            Some(expr) => Some(Expr::Prefix(prefix, Box::new(expr))),
+            None => None,
+        }
     }
 
     fn parse_infix_expr(&mut self, left: Expr) -> Option<Expr> {
@@ -300,12 +303,10 @@ impl<'a> Parser<'a> {
 
         self.bump();
 
-        let right = match self.parse_expr(precedence) {
-            Some(expr) => expr,
-            None => return None,
-        };
-
-        Some(Expr::Infix(infix, Box::new(left), Box::new(right)))
+        match self.parse_expr(precedence) {
+            Some(expr) => Some(Expr::Infix(infix, Box::new(left), Box::new(expr))),
+            None => None,
+        }
     }
 
     fn parse_grouped_expr(&mut self) -> Option<Expr> {
@@ -386,23 +387,19 @@ impl<'a> Parser<'a> {
 
         self.bump();
 
-        let ident = match self.parse_ident() {
-            Some(ident) => ident,
+        match self.parse_ident() {
+            Some(ident) => params.push(ident),
             None => return None,
         };
-
-        params.push(ident);
 
         while self.next_token_is(Token::Comma) {
             self.bump();
             self.bump();
 
-            let ident = match self.parse_ident() {
-                Some(ident) => ident,
+            match self.parse_ident() {
+                Some(ident) => params.push(ident),
                 None => return None,
             };
-
-            params.push(ident);
         }
 
         if !self.expect_next_token(Token::Rparen) {
@@ -410,6 +407,50 @@ impl<'a> Parser<'a> {
         }
 
         Some(params)
+    }
+
+    fn parse_call_expr(&mut self, func: Expr) -> Option<Expr> {
+        let args = match self.parse_call_args() {
+            Some(args) => args,
+            None => return None,
+        };
+
+        Some(Expr::Call {
+            func: Box::new(func),
+            args,
+        })
+    }
+
+    fn parse_call_args(&mut self) -> Option<Vec<Expr>> {
+        let mut args = vec![];
+
+        if self.next_token_is(Token::Rparen) {
+            self.bump();
+            return Some(args);
+        }
+
+        self.bump();
+
+        match self.parse_expr(Precedence::Lowest) {
+            Some(expr) => args.push(expr),
+            None => return None,
+        }
+
+        while self.next_token_is(Token::Comma) {
+            self.bump();
+            self.bump();
+
+            match self.parse_expr(Precedence::Lowest) {
+                Some(expr) => args.push(expr),
+                None => return None,
+            }
+        }
+
+        if !self.expect_next_token(Token::Rparen) {
+            return None;
+        }
+
+        Some(args)
     }
 }
 
@@ -734,6 +775,37 @@ return 993322;
                 body: vec![],
             }), program[0]);
         }
+    }
+
+    #[test]
+    fn test_call_expr() {
+        let input = "add(1, 2 * 3, 4 + 5);";
+
+        let mut parser = Parser::new(Lexer::new(input));
+        let program = parser.parse();
+
+        check_parse_errors(&mut parser);
+        assert_eq!(
+            vec![
+                Stmt::Expr(Expr::Call {
+                    func: Box::new(Expr::Ident(Ident(String::from("add")))),
+                    args: vec![
+                        Expr::Literal(Literal::Int(1)),
+                        Expr::Infix(
+                            Infix::Multiply,
+                            Box::new(Expr::Literal(Literal::Int(2))),
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                        ),
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                        ),
+                    ],
+                }),
+            ],
+            program,
+        );
     }
 
     #[test]
@@ -1066,6 +1138,97 @@ return 993322;
                         ),
                     ),
                 ),
+            )),
+            ("a + add(b * c) + d", Stmt::Expr(
+                Expr::Infix(
+                    Infix::Plus,
+                    Box::new(
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Ident(Ident(String::from("a")))),
+                            Box::new(
+                                Expr::Call {
+                                    func: Box::new(Expr::Ident(Ident(String::from("add")))),
+                                    args: vec![
+                                        Expr::Infix(
+                                            Infix::Multiply,
+                                            Box::new(Expr::Ident(Ident(String::from("b")))),
+                                            Box::new(Expr::Ident(Ident(String::from("c")))),
+                                            ),
+                                    ],
+                                },
+                            ),
+                        ),
+                    ),
+                    Box::new(Expr::Ident(Ident(String::from("d")))),
+                ),
+            )),
+            ("add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", Stmt::Expr(
+                Expr::Call {
+                    func: Box::new(Expr::Ident(Ident(String::from("add")))),
+                    args: vec![
+                        Expr::Ident(Ident(String::from("a"))),
+                        Expr::Ident(Ident(String::from("b"))),
+                        Expr::Literal(Literal::Int(1)),
+                        Expr::Infix(
+                            Infix::Multiply,
+                            Box::new(Expr::Literal(Literal::Int(2))),
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                        ),
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                        ),
+                        Expr::Call {
+                            func: Box::new(Expr::Ident(Ident(String::from("add")))),
+                            args: vec![
+                                Expr::Literal(Literal::Int(6)),
+                                Expr::Infix(
+                                    Infix::Multiply,
+                                    Box::new(Expr::Literal(Literal::Int(7))),
+                                    Box::new(Expr::Literal(Literal::Int(8))),
+                                ),
+                            ],
+                        },
+                    ],
+                },
+            )),
+            ("add(a + b + c * d / f + g)", Stmt::Expr(
+                Expr::Call {
+                    func: Box::new(Expr::Ident(Ident(String::from("add")))),
+                    args: vec![
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(
+                                Expr::Infix(
+                                    Infix::Plus,
+                                    Box::new(
+                                        Expr::Infix(
+                                            Infix::Plus,
+                                            Box::new(Expr::Ident(Ident(String::from("a")))),
+                                            Box::new(Expr::Ident(Ident(String::from("b")))),
+                                        ),
+                                    ),
+                                    Box::new(
+                                        Expr::Infix(
+                                            Infix::Divide,
+                                            Box::new(
+                                                Expr::Infix(
+                                                    Infix::Multiply,
+                                                    Box::new(Expr::Ident(Ident(String::from("c")))),
+                                                    Box::new(Expr::Ident(Ident(String::from("d")))),
+                                                ),
+                                            ),
+                                            Box::new(Expr::Ident(Ident(String::from("f")))),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            Box::new(Expr::Ident(Ident(String::from("g")))),
+                        ),
+                    ],
+                },
             )),
         ];
 
