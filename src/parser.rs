@@ -149,41 +149,47 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_let_stmt(&mut self) -> Option<Stmt> {
-        let ident = match &self.next_token {
-            Token::Ident(s) => s.clone(),
+        match &self.next_token {
+            Token::Ident(_) => self.bump(),
             _ => return None,
         };
 
-        self.bump();
+        let name = match self.parse_ident() {
+            Some(name) => name,
+            None => return None,
+        };
 
         if !self.expect_next_token(Token::Assign) {
             return None;
         }
 
-        // TODO We're skipping the expressions until we encounter a semicolon.
-        while !self.current_token_is(Token::Semicolon) {
+        self.bump();
+
+        let expr = match self.parse_expr(Precedence::Lowest) {
+            Some(expr) => expr,
+            None => return None,
+        };
+
+        if self.next_token_is(Token::Semicolon) {
             self.bump();
         }
 
-        Some(Stmt::Let(
-            Ident(ident),
-            Expr::Ident(Ident(String::new())), // TODO
-        ))
+        Some(Stmt::Let(name, expr))
     }
 
     fn parse_return_stmt(&mut self) -> Option<Stmt> {
-        let stmt = Stmt::Return(
-            Expr::Ident(Ident(String::new())),
-        );
-
         self.bump();
 
-        // TODO We're skipping the expressions until we encounter a semicolon.
-        while !self.current_token_is(Token::Semicolon) {
+        let expr = match self.parse_expr(Precedence::Lowest) {
+            Some(expr) => expr,
+            None => return None,
+        };
+
+        if self.next_token_is(Token::Semicolon) {
             self.bump();
         }
 
-        Some(stmt)
+        Some(Stmt::Return(expr))
     }
 
     fn parse_expr_stmt(&mut self) -> Option<Stmt> {
@@ -496,15 +502,15 @@ let foobar = 838383;
             vec![
                 Stmt::Let(
                     Ident(String::from("x")),
-                    Expr::Ident(Ident(String::new())), // TODO
+                    Expr::Literal(Literal::Int(5)),
                 ),
                 Stmt::Let(
                     Ident(String::from("y")),
-                    Expr::Ident(Ident(String::new())), // TODO
+                    Expr::Literal(Literal::Int(10)),
                 ),
                 Stmt::Let(
                     Ident(String::from("foobar")),
-                    Expr::Ident(Ident(String::new())), // TODO
+                    Expr::Literal(Literal::Int(838383)),
                 ),
             ],
             program,
@@ -526,13 +532,13 @@ return 993322;
         assert_eq!(
             vec![
                 Stmt::Return(
-                    Expr::Ident(Ident(String::from(""))), // TODO
+                    Expr::Literal(Literal::Int(5)),
                 ),
                 Stmt::Return(
-                    Expr::Ident(Ident(String::from(""))), // TODO
+                    Expr::Literal(Literal::Int(10)),
                 ),
                 Stmt::Return(
-                    Expr::Ident(Ident(String::from(""))), // TODO
+                    Expr::Literal(Literal::Int(993322)),
                 ),
             ],
             program,
