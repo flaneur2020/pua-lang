@@ -1,3 +1,4 @@
+use std::fmt;
 use ast::*;
 use lexer::Lexer;
 use token::Token;
@@ -16,6 +17,12 @@ pub struct ParseError {
 impl ParseError {
     fn new(kind: ParseErrorKind, msg: String) -> Self {
         ParseError { kind, msg }
+    }
+}
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
