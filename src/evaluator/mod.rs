@@ -29,6 +29,35 @@ impl Evaluator {
     fn eval_expr(&mut self, expr: Expr) -> Option<Object> {
         match expr {
             Expr::Literal(literal) => self.eval_literal(literal),
+            Expr::Prefix(prefix, expr) => if let Some(right) = self.eval_expr(*expr) {
+                self.eval_prefix_expr(prefix, right)
+            } else {
+                None
+            }
+            _ => None,
+        }
+    }
+
+    fn eval_prefix_expr(&mut self, prefix: Prefix, right: Object) -> Option<Object> {
+        match prefix {
+            Prefix::Not => Some(self.eval_not_op_expr(right)),
+            Prefix::Minus => self.eval_minus_prefix_op_expr(right),
+            _ => None,
+        }
+    }
+
+    fn eval_not_op_expr(&mut self, right: Object) -> Object {
+        match right {
+            Object::Bool(true) => Object::Bool(false),
+            Object::Bool(false) => Object::Bool(true),
+            Object::Null => Object::Bool(true),
+            _ => Object::Bool(false),
+        }
+    }
+
+    fn eval_minus_prefix_op_expr(&mut self, right: Object) -> Option<Object> {
+        match right {
+            Object::Int(value) => Some(Object::Int(-value)),
             _ => None,
         }
     }
@@ -53,10 +82,12 @@ mod tests {
     }
 
     #[test]
-    fn test_integer_expr() {
+    fn test_int_expr() {
         let tests = vec![
             ("5", Object::Int(5)),
             ("10", Object::Int(10)),
+            ("-5", Object::Int(-5)),
+            ("-10", Object::Int(-10)),
         ];
 
         for (input, expect) in tests {
@@ -69,6 +100,21 @@ mod tests {
         let tests = vec![
             ("true", Object::Bool(true)),
             ("false", Object::Bool(false)),
+        ];
+
+        for (input, expect) in tests {
+            assert_eq!(expect, eval(input));
+        }
+    }
+
+    #[test]
+    fn test_not_operator() {
+        let tests = vec![
+            ("!true", Object::Bool(false)),
+            ("!false", Object::Bool(true)),
+            ("!!true", Object::Bool(true)),
+            ("!!false", Object::Bool(false)),
+            ("!!5", Object::Bool(true)),
         ];
 
         for (input, expect) in tests {
