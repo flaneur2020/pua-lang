@@ -29,10 +29,19 @@ impl Evaluator {
     fn eval_expr(&mut self, expr: Expr) -> Option<Object> {
         match expr {
             Expr::Literal(literal) => self.eval_literal(literal),
-            Expr::Prefix(prefix, expr) => if let Some(right) = self.eval_expr(*expr) {
+            Expr::Prefix(prefix, right_expr) => if let Some(right) = self.eval_expr(*right_expr) {
                 self.eval_prefix_expr(prefix, right)
             } else {
                 None
+            }
+            Expr::Infix(infix, left_expr, right_expr) => {
+                let left = self.eval_expr(*left_expr);
+                let right = self.eval_expr(*right_expr);
+                if left.is_some() && right.is_some() {
+                    self.eval_infix_expr(infix, left.unwrap(), right.unwrap())
+                } else {
+                    None
+                }
             }
             _ => None,
         }
@@ -62,6 +71,32 @@ impl Evaluator {
         }
     }
 
+    fn eval_infix_expr(&mut self, infix: Infix, left: Object, right: Object) -> Option<Object> {
+        match left {
+            Object::Int(left_value) => if let Object::Int(right_value) = right {
+                Some(self.eval_infix_int_expr(infix, left_value, right_value))
+            } else {
+                None
+            },
+            _ => None,
+        }
+    }
+
+    fn eval_infix_int_expr(&mut self, infix: Infix, left: i64, right: i64) -> Object {
+        match infix {
+            Infix::Plus => Object::Int(left + right),
+            Infix::Minus => Object::Int(left - right),
+            Infix::Multiply => Object::Int(left * right),
+            Infix::Divide => Object::Int(left / right),
+            Infix::LessThan => Object::Bool(left < right),
+            Infix::LessThanEqual => Object::Bool(left <= right),
+            Infix::GreaterThan => Object::Bool(left > right),
+            Infix::GreaterThanEqual => Object::Bool(left >= right),
+            Infix::Equal => Object::Bool(left == right),
+            Infix::NotEqual => Object::Bool(left != right),
+        }
+    }
+
     fn eval_literal(&mut self, literal: Literal) -> Option<Object> {
         match literal {
             Literal::Int(value) => Some(Object::Int(value)),
@@ -88,6 +123,17 @@ mod tests {
             ("10", Object::Int(10)),
             ("-5", Object::Int(-5)),
             ("-10", Object::Int(-10)),
+            ("5 + 5 + 5 + 5 - 10", Object::Int(10)),
+            ("2 * 2 * 2 * 2 * 2", Object::Int(32)),
+            ("-50 + 100 + -50", Object::Int(0)),
+            ("5 * 2 + 10", Object::Int(20)),
+            ("5 + 2 * 10", Object::Int(25)),
+            ("20 + 2 * -10", Object::Int(0)),
+            ("50 / 2 * 2 + 10", Object::Int(60)),
+            ("2 * (5 + 10)", Object::Int(30)),
+            ("3 * 3 * 3 + 10", Object::Int(37)),
+            ("3 * (3 * 3) + 10", Object::Int(37)),
+            ("(5 + 10 * 2 + 15 / 3) * 2 + -10", Object::Int(50)),
         ];
 
         for (input, expect) in tests {
@@ -100,6 +146,19 @@ mod tests {
         let tests = vec![
             ("true", Object::Bool(true)),
             ("false", Object::Bool(false)),
+            ("1 < 2", Object::Bool(true)),
+            ("1 > 2", Object::Bool(false)),
+            ("1 < 1", Object::Bool(false)),
+            ("1 > 1", Object::Bool(false)),
+            ("1 >= 1", Object::Bool(true)),
+            ("1 <= 1", Object::Bool(true)),
+            ("1 >= 2", Object::Bool(false)),
+            ("1 <= 1", Object::Bool(true)),
+            ("2 <= 1", Object::Bool(false)),
+            ("1 == 1", Object::Bool(true)),
+            ("1 != 1", Object::Bool(false)),
+            ("1 == 2", Object::Bool(false)),
+            ("1 != 2", Object::Bool(true)),
         ];
 
         for (input, expect) in tests {
