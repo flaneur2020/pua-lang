@@ -1,8 +1,7 @@
 use std::io::{Stdin, Stdout, Write};
-use token::Token;
 use lexer::Lexer;
 use parser::Parser;
-use evaluator::{Evaluator};
+use evaluator::Evaluator;
 
 pub fn start(stdin: Stdin, stdout: Stdout) {
     let mut evaluator = Evaluator::new();

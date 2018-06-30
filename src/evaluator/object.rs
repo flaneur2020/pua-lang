@@ -5,6 +5,7 @@ pub enum Object {
     Int(i64),
     Bool(bool),
     Null,
+    ReturnValue(Box<Object>),
 }
 
 impl fmt::Display for Object {
@@ -13,6 +14,7 @@ impl fmt::Display for Object {
             Object::Int(ref value) => write!(f, "{}", value),
             Object::Bool(ref value) => write!(f, "{}", value),
             Object::Null => write!(f, "null"),
+            Object::ReturnValue(ref value) => write!(f, "{}", value),
         }
     }
 }

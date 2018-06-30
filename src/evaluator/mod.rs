@@ -19,16 +19,39 @@ impl Evaluator {
     }
 
     pub fn eval(&mut self, program: Program) -> Object {
-        self.eval_block_stmt(program).unwrap_or(Object::Null)
+        let mut result = Object::Null;
+
+        for stmt in program {
+            match self.eval_stmt(stmt) {
+                Some(Object::ReturnValue(value)) => return *value,
+                obj => result = obj.unwrap_or(Object::Null),
+            }
+        }
+
+        result
     }
 
     fn eval_block_stmt(&mut self, stmts: BlockStmt) -> Option<Object> {
-        stmts.into_iter().fold(None, |_, x| self.eval_stmt(x))
+        let mut result = None;
+
+        for stmt in stmts {
+            match self.eval_stmt(stmt) {
+                Some(Object::ReturnValue(value)) => return Some(Object::ReturnValue(value)),
+                obj => result = obj,
+            }
+        }
+
+        result
     }
 
     fn eval_stmt(&mut self, stmt: Stmt) -> Option<Object> {
         match stmt {
             Stmt::Expr(expr) => self.eval_expr(expr),
+            Stmt::Return(expr) => if let Some(value) = self.eval_expr(expr) {
+                Some(Object::ReturnValue(Box::new(value)))
+            } else {
+                None
+            },
             _ => None,
         }
     }
@@ -133,7 +156,6 @@ mod tests {
     use lexer::Lexer;
     use parser::Parser;
     use evaluator::*;
-    use evaluator::object::*;
 
     fn eval(input: &str) -> Object {
         Evaluator::new().eval(Parser::new(Lexer::new(input)).parse())
@@ -218,6 +240,27 @@ mod tests {
             ("if (1 >= 2) { 10 }", Object::Null),
             ("if (1 >= 2) { 10 } else { 20 }", Object::Int(20)),
             ("if (1 <= 2) { 10 } else { 20 }", Object::Int(10)),
+        ];
+
+        for (input, expect) in tests {
+            assert_eq!(expect, eval(input));
+        }
+    }
+
+    #[test]
+    fn test_return_stmt() {
+        let tests = vec![
+            ("return 10;", Object::Int(10)),
+            ("return 10; 9;", Object::Int(10)),
+            ("return 2 * 5; 9;", Object::Int(10)),
+            ("9; return 2 * 5; 9;", Object::Int(10)),
+            (r#"
+if (10 > 1) {
+  if (10 > 1) {
+    return 10;
+  }
+  return 1;
+}"#, Object::Int(10)),
         ];
 
         for (input, expect) in tests {
