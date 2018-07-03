@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(PartialEq, Debug)]
 pub struct Ident(pub String);
 
@@ -6,6 +8,16 @@ pub enum Prefix {
     Plus,
     Minus,
     Not,
+}
+
+impl fmt::Display for Prefix {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Prefix::Plus => write!(f, "+"),
+            Prefix::Minus => write!(f, "-"),
+            Prefix::Not => write!(f, "!"),
+        }
+    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -20,6 +32,23 @@ pub enum Infix {
     GreaterThan,
     LessThanEqual,
     LessThan,
+}
+
+impl fmt::Display for Infix {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Infix::Plus => write!(f, "+"),
+            Infix::Minus => write!(f, "-"),
+            Infix::Divide => write!(f, "/"),
+            Infix::Multiply => write!(f, "*"),
+            Infix::Equal => write!(f, "=="),
+            Infix::NotEqual => write!(f, "!="),
+            Infix::GreaterThanEqual => write!(f, ">="),
+            Infix::GreaterThan => write!(f, ">"),
+            Infix::LessThanEqual => write!(f, "<="),
+            Infix::LessThan => write!(f, "<"),
+        }
+    }
 }
 
 #[derive(PartialEq, Debug)]

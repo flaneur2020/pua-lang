@@ -18,12 +18,24 @@ impl Evaluator {
         }
     }
 
+    fn error(msg: String) -> Object {
+        Object::Error(msg)
+    }
+
+    fn is_error(obj: &Object) -> bool {
+        match obj {
+            Object::Error(_) => true,
+            _ => false,
+        }
+    }
+
     pub fn eval(&mut self, program: Program) -> Object {
         let mut result = Object::Null;
 
         for stmt in program {
             match self.eval_stmt(stmt) {
                 Some(Object::ReturnValue(value)) => return *value,
+                Some(Object::Error(msg)) => return Object::Error(msg),
                 obj => result = obj.unwrap_or(Object::Null),
             }
         }
@@ -37,6 +49,7 @@ impl Evaluator {
         for stmt in stmts {
             match self.eval_stmt(stmt) {
                 Some(Object::ReturnValue(value)) => return Some(Object::ReturnValue(value)),
+                Some(Object::Error(msg)) => return Some(Object::Error(msg)),
                 obj => result = obj,
             }
         }
@@ -47,10 +60,16 @@ impl Evaluator {
     fn eval_stmt(&mut self, stmt: Stmt) -> Option<Object> {
         match stmt {
             Stmt::Expr(expr) => self.eval_expr(expr),
-            Stmt::Return(expr) => if let Some(value) = self.eval_expr(expr) {
-                Some(Object::ReturnValue(Box::new(value)))
-            } else {
-                None
+            Stmt::Return(expr) => {
+                if let Some(value) = self.eval_expr(expr) {
+                    if Self::is_error(&value) {
+                        Some(value)
+                    } else {
+                        Some(Object::ReturnValue(Box::new(value)))
+                    }
+                } else {
+                    None
+                }
             },
             _ => None,
         }
@@ -60,7 +79,7 @@ impl Evaluator {
         match expr {
             Expr::Literal(literal) => self.eval_literal(literal),
             Expr::Prefix(prefix, right_expr) => if let Some(right) = self.eval_expr(*right_expr) {
-                self.eval_prefix_expr(prefix, right)
+                Some(self.eval_prefix_expr(prefix, right))
             } else {
                 None
             },
@@ -68,7 +87,7 @@ impl Evaluator {
                 let left = self.eval_expr(*left_expr);
                 let right = self.eval_expr(*right_expr);
                 if left.is_some() && right.is_some() {
-                    self.eval_infix_expr(infix, left.unwrap(), right.unwrap())
+                    Some(self.eval_infix_expr(infix, left.unwrap(), right.unwrap()))
                 } else {
                     None
                 }
@@ -78,11 +97,11 @@ impl Evaluator {
         }
     }
 
-    fn eval_prefix_expr(&mut self, prefix: Prefix, right: Object) -> Option<Object> {
+    fn eval_prefix_expr(&mut self, prefix: Prefix, right: Object) -> Object {
         match prefix {
-            Prefix::Not => Some(self.eval_not_op_expr(right)),
+            Prefix::Not => self.eval_not_op_expr(right),
             Prefix::Minus => self.eval_minus_prefix_op_expr(right),
-            _ => None,
+            _ => Self::error(String::from(format!("unknown operator: {} {}", prefix, right))),
         }
     }
 
@@ -95,21 +114,21 @@ impl Evaluator {
         }
     }
 
-    fn eval_minus_prefix_op_expr(&mut self, right: Object) -> Option<Object> {
+    fn eval_minus_prefix_op_expr(&mut self, right: Object) -> Object {
         match right {
-            Object::Int(value) => Some(Object::Int(-value)),
-            _ => None,
+            Object::Int(value) => Object::Int(-value),
+            _ => Self::error(String::from(format!("unknown operator: -{}", right))),
         }
     }
 
-    fn eval_infix_expr(&mut self, infix: Infix, left: Object, right: Object) -> Option<Object> {
+    fn eval_infix_expr(&mut self, infix: Infix, left: Object, right: Object) -> Object {
         match left {
             Object::Int(left_value) => if let Object::Int(right_value) = right {
-                Some(self.eval_infix_int_expr(infix, left_value, right_value))
+                self.eval_infix_int_expr(infix, left_value, right_value)
             } else {
-                None
+                Self::error(String::from(format!("type mismatch: {} {} {}", left, infix, right)))
             },
-            _ => None,
+            _ => Self::error(String::from(format!("unknown operator: {} {} {}", left, infix, right))),
         }
     }
 
@@ -261,6 +280,28 @@ if (10 > 1) {
   }
   return 1;
 }"#, Object::Int(10)),
+        ];
+
+        for (input, expect) in tests {
+            assert_eq!(expect, eval(input));
+        }
+    }
+
+    #[test]
+    fn test_error_handling() {
+        let tests = vec![
+            ("5 + true", Object::Error(String::from("type mismatch: 5 + true"))),
+            ("5 + true; 5;", Object::Error(String::from("type mismatch: 5 + true"))),
+            ("-true", Object::Error(String::from("unknown operator: -true"))),
+            ("5; true + false; 5;", Object::Error(String::from("unknown operator: true + false"))),
+            ("if (10 > 1) { true + false; }", Object::Error(String::from("unknown operator: true + false"))),
+            (r#"
+if (10 > 1) {
+  if (10 > 1) {
+    return true + false;
+  }
+  return 1;
+}"#, Object::Error(String::from("unknown operator: true + false"))),
         ];
 
         for (input, expect) in tests {
