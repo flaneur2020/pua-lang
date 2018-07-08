@@ -19,7 +19,13 @@ impl fmt::Display for Object {
         match *self {
             Object::Int(ref value) => write!(f, "{}", value),
             Object::Bool(ref value) => write!(f, "{}", value),
-            Object::Func(_, _, _) => write!(f, "fn()"),
+            Object::Func(ref params, _, _) => {
+                let mut param_string = String::new();
+                for Ident(s) in params {
+                    param_string.push_str(&s);
+                }
+                write!(f, "fn({}) {{ ... }}", param_string)
+            }
             Object::Null => write!(f, "null"),
             Object::ReturnValue(ref value) => write!(f, "{}", value),
             Object::Error(ref value) => write!(f, "{}", value),
