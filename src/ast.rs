@@ -1,9 +1,9 @@
 use std::fmt;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub struct Ident(pub String);
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Prefix {
     Plus,
     Minus,
@@ -20,7 +20,7 @@ impl fmt::Display for Prefix {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Infix {
     Plus,
     Minus,
@@ -51,7 +51,7 @@ impl fmt::Display for Infix {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Expr {
     Ident(Ident),
     Literal(Literal),
@@ -72,13 +72,13 @@ pub enum Expr {
     },
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Literal {
     Int(i64),
     Bool(bool),
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Stmt {
     Let(Ident, Expr),
     Return(Expr),
