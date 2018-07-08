@@ -440,4 +440,34 @@ if (10 > 1) {
             assert_eq!(expect, eval(input));
         }
     }
+
+// FIXME Someday, I want to run Z Combinator...
+//     #[test]
+//     fn test_z_combinator() {
+//         let input = r#"
+// let z = fn(f) {
+//   return fn(x) {
+//     return f(fn(y) {
+//       return x(x)(y);
+//     });
+//   }(fn(x) {
+//     return f(fn(y) {
+//       return x(x)(y);
+//     });
+//   });
+// };
+//
+// return z(fn(f) {
+//   return fn(n) {
+//     if (n == 0) {
+//       1
+//     } else {
+//       n * f(n - 1)
+//     }
+//   };
+// })(5);
+//         "#;
+//
+//         assert_eq!(Some(Object::Int(120)), eval(input));
+//     }
 }
