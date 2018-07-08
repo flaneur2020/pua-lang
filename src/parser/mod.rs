@@ -1,6 +1,6 @@
-use std::fmt;
 use ast::*;
 use lexer::Lexer;
+use std::fmt;
 use token::Token;
 
 #[derive(Debug, Clone)]
@@ -58,7 +58,7 @@ impl<'a> Parser<'a> {
             Token::Plus | Token::Minus => Precedence::Sum,
             Token::Slash | Token::Asterisk => Precedence::Product,
             Token::Lparen => Precedence::Call,
-            _ => Precedence::Lowest
+            _ => Precedence::Lowest,
         }
     }
 
@@ -109,11 +109,11 @@ impl<'a> Parser<'a> {
 
     fn error_no_prefix_parser(&mut self) {
         self.errors.push(ParseError::new(
-                ParseErrorKind::UnexpectedToken,
-                format!(
-                    "no prefix parse function for %s found \"{:?}\"",
-                    self.current_token,
-                ),
+            ParseErrorKind::UnexpectedToken,
+            format!(
+                "no prefix parse function for %s found \"{:?}\"",
+                self.current_token,
+            ),
         ));
     }
 
@@ -123,7 +123,7 @@ impl<'a> Parser<'a> {
         while !self.current_token_is(Token::Eof) {
             match self.parse_stmt() {
                 Some(stmt) => program.push(stmt),
-                None => {},
+                None => {}
             }
             self.bump();
         }
@@ -139,7 +139,7 @@ impl<'a> Parser<'a> {
         while !self.current_token_is(Token::Rbrace) && !self.current_token_is(Token::Eof) {
             match self.parse_stmt() {
                 Some(stmt) => block.push(stmt),
-                None => {},
+                None => {}
             }
             self.bump();
         }
@@ -206,7 +206,7 @@ impl<'a> Parser<'a> {
                     self.bump();
                 }
                 Some(Stmt::Expr(expr))
-            },
+            }
             None => None,
         }
     }
@@ -216,6 +216,7 @@ impl<'a> Parser<'a> {
         let mut left = match self.current_token {
             Token::Ident(_) => self.parse_ident_expr(),
             Token::Int(_) => self.parse_int_expr(),
+            Token::String(_) => self.parse_string_expr(),
             Token::Bool(_) => self.parse_bool_expr(),
             Token::Bang | Token::Minus => self.parse_prefix_expr(),
             Token::Lparen => self.parse_grouped_expr(),
@@ -231,18 +232,18 @@ impl<'a> Parser<'a> {
         while !self.next_token_is(Token::Semicolon) && precedence < self.next_token_precedence() {
             match self.next_token {
                 Token::Plus
-                    | Token::Minus
-                    | Token::Slash
-                    | Token::Asterisk
-                    | Token::Equal
-                    | Token::NotEqual
-                    | Token::LessThan
-                    | Token::LessThanEqual
-                    | Token::GreaterThan
-                    | Token::GreaterThanEqual => {
-                        self.bump();
-                        left = self.parse_infix_expr(left.unwrap());
-                    },
+                | Token::Minus
+                | Token::Slash
+                | Token::Asterisk
+                | Token::Equal
+                | Token::NotEqual
+                | Token::LessThan
+                | Token::LessThanEqual
+                | Token::GreaterThan
+                | Token::GreaterThanEqual => {
+                    self.bump();
+                    left = self.parse_infix_expr(left.unwrap());
+                }
                 Token::Lparen => {
                     self.bump();
                     left = self.parse_call_expr(left.unwrap());
@@ -256,8 +257,8 @@ impl<'a> Parser<'a> {
 
     fn parse_ident(&mut self) -> Option<Ident> {
         match self.current_token {
-            Token::Ident(ref mut ident) => Some(Ident(ident.clone())), // FIXME Is `.clone()` correct?
-            _ => None
+            Token::Ident(ref mut ident) => Some(Ident(ident.clone())),
+            _ => None,
         }
     }
 
@@ -270,15 +271,22 @@ impl<'a> Parser<'a> {
 
     fn parse_int_expr(&mut self) -> Option<Expr> {
         match self.current_token {
-            Token::Int(ref mut int) => Some(Expr::Literal(Literal::Int(int.clone()))), // FIXME Is `.clone()` correct?
-            _ => None
+            Token::Int(ref mut int) => Some(Expr::Literal(Literal::Int(int.clone()))),
+            _ => None,
+        }
+    }
+
+    fn parse_string_expr(&mut self) -> Option<Expr> {
+        match self.current_token {
+            Token::String(ref mut s) => Some(Expr::Literal(Literal::String(s.clone()))),
+            _ => None,
         }
     }
 
     fn parse_bool_expr(&mut self) -> Option<Expr> {
         match self.current_token {
             Token::Bool(value) => Some(Expr::Literal(Literal::Bool(value == true))),
-            _ => None
+            _ => None,
         }
     }
 
@@ -507,14 +515,8 @@ let foobar = 838383;
         check_parse_errors(&mut parser);
         assert_eq!(
             vec![
-                Stmt::Let(
-                    Ident(String::from("x")),
-                    Expr::Literal(Literal::Int(5)),
-                ),
-                Stmt::Let(
-                    Ident(String::from("y")),
-                    Expr::Literal(Literal::Int(10)),
-                ),
+                Stmt::Let(Ident(String::from("x")), Expr::Literal(Literal::Int(5))),
+                Stmt::Let(Ident(String::from("y")), Expr::Literal(Literal::Int(10))),
                 Stmt::Let(
                     Ident(String::from("foobar")),
                     Expr::Literal(Literal::Int(838383)),
@@ -538,15 +540,9 @@ return 993322;
         check_parse_errors(&mut parser);
         assert_eq!(
             vec![
-                Stmt::Return(
-                    Expr::Literal(Literal::Int(5)),
-                ),
-                Stmt::Return(
-                    Expr::Literal(Literal::Int(10)),
-                ),
-                Stmt::Return(
-                    Expr::Literal(Literal::Int(993322)),
-                ),
+                Stmt::Return(Expr::Literal(Literal::Int(5))),
+                Stmt::Return(Expr::Literal(Literal::Int(10))),
+                Stmt::Return(Expr::Literal(Literal::Int(993322))),
             ],
             program,
         );
@@ -561,9 +557,7 @@ return 993322;
 
         check_parse_errors(&mut parser);
         assert_eq!(
-            vec![
-                Stmt::Expr(Expr::Ident(Ident(String::from("foobar")))),
-            ],
+            vec![Stmt::Expr(Expr::Ident(Ident(String::from("foobar"))))],
             program,
         );
     }
@@ -576,10 +570,21 @@ return 993322;
         let program = parser.parse();
 
         check_parse_errors(&mut parser);
+        assert_eq!(vec![Stmt::Expr(Expr::Literal(Literal::Int(5)))], program,);
+    }
+
+    #[test]
+    fn test_string_literal_expr() {
+        let input = "\"hello world\";";
+
+        let mut parser = Parser::new(Lexer::new(input));
+        let program = parser.parse();
+
+        check_parse_errors(&mut parser);
         assert_eq!(
-            vec![
-                Stmt::Expr(Expr::Literal(Literal::Int(5))),
-            ],
+            vec![Stmt::Expr(Expr::Literal(Literal::String(String::from(
+                "hello world",
+            ))))],
             program,
         );
     }
@@ -603,8 +608,20 @@ return 993322;
     #[test]
     fn test_prefix_expr() {
         let tests = vec![
-            ("!5;", Stmt::Expr(Expr::Prefix(Prefix::Not, Box::new(Expr::Literal(Literal::Int(5)))))),
-            ("-15;", Stmt::Expr(Expr::Prefix(Prefix::Minus, Box::new(Expr::Literal(Literal::Int(15)))))),
+            (
+                "!5;",
+                Stmt::Expr(Expr::Prefix(
+                    Prefix::Not,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
+            (
+                "-15;",
+                Stmt::Expr(Expr::Prefix(
+                    Prefix::Minus,
+                    Box::new(Expr::Literal(Literal::Int(15))),
+                )),
+            ),
         ];
 
         for (input, expect) in tests {
@@ -619,56 +636,86 @@ return 993322;
     #[test]
     fn test_infix_expr() {
         let tests = vec![
-            ("5 + 5;", Stmt::Expr(Expr::Infix(
-                Infix::Plus,
-                Box::new(Expr::Literal(Literal::Int(5))),
-                Box::new(Expr::Literal(Literal::Int(5))),
-            ))),
-            ("5 - 5;", Stmt::Expr(Expr::Infix(
-                Infix::Minus,
-                Box::new(Expr::Literal(Literal::Int(5))),
-                Box::new(Expr::Literal(Literal::Int(5))),
-            ))),
-            ("5 * 5;", Stmt::Expr(Expr::Infix(
-                Infix::Multiply,
-                Box::new(Expr::Literal(Literal::Int(5))),
-                Box::new(Expr::Literal(Literal::Int(5))),
-            ))),
-            ("5 / 5;", Stmt::Expr(Expr::Infix(
-                Infix::Divide,
-                Box::new(Expr::Literal(Literal::Int(5))),
-                Box::new(Expr::Literal(Literal::Int(5))),
-            ))),
-            ("5 > 5;", Stmt::Expr(Expr::Infix(
-                Infix::GreaterThan,
-                Box::new(Expr::Literal(Literal::Int(5))),
-                Box::new(Expr::Literal(Literal::Int(5))),
-            ))),
-            ("5 < 5;", Stmt::Expr(Expr::Infix(
-                Infix::LessThan,
-                Box::new(Expr::Literal(Literal::Int(5))),
-                Box::new(Expr::Literal(Literal::Int(5))),
-            ))),
-            ("5 == 5;", Stmt::Expr(Expr::Infix(
-                Infix::Equal,
-                Box::new(Expr::Literal(Literal::Int(5))),
-                Box::new(Expr::Literal(Literal::Int(5))),
-            ))),
-            ("5 != 5;", Stmt::Expr(Expr::Infix(
-                Infix::NotEqual,
-                Box::new(Expr::Literal(Literal::Int(5))),
-                Box::new(Expr::Literal(Literal::Int(5))),
-            ))),
-            ("5 >= 5;", Stmt::Expr(Expr::Infix(
-                Infix::GreaterThanEqual,
-                Box::new(Expr::Literal(Literal::Int(5))),
-                Box::new(Expr::Literal(Literal::Int(5))),
-            ))),
-            ("5 <= 5;", Stmt::Expr(Expr::Infix(
-                Infix::LessThanEqual,
-                Box::new(Expr::Literal(Literal::Int(5))),
-                Box::new(Expr::Literal(Literal::Int(5))),
-            ))),
+            (
+                "5 + 5;",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Plus,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
+            (
+                "5 - 5;",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Minus,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
+            (
+                "5 * 5;",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Multiply,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
+            (
+                "5 / 5;",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Divide,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
+            (
+                "5 > 5;",
+                Stmt::Expr(Expr::Infix(
+                    Infix::GreaterThan,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
+            (
+                "5 < 5;",
+                Stmt::Expr(Expr::Infix(
+                    Infix::LessThan,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
+            (
+                "5 == 5;",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Equal,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
+            (
+                "5 != 5;",
+                Stmt::Expr(Expr::Infix(
+                    Infix::NotEqual,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
+            (
+                "5 >= 5;",
+                Stmt::Expr(Expr::Infix(
+                    Infix::GreaterThanEqual,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
+            (
+                "5 <= 5;",
+                Stmt::Expr(Expr::Infix(
+                    Infix::LessThanEqual,
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                    Box::new(Expr::Literal(Literal::Int(5))),
+                )),
+            ),
         ];
 
         for (input, expect) in tests {
@@ -689,17 +736,15 @@ return 993322;
 
         check_parse_errors(&mut parser);
         assert_eq!(
-            vec![
-                Stmt::Expr(
-                    Expr::If {
-                        cond: Box::new(Expr::Infix(Infix::LessThan, Box::new(Expr::Ident(Ident(String::from("x")))), Box::new(Expr::Ident(Ident(String::from("y")))))),
-                        consequence: vec![
-                            Stmt::Expr(Expr::Ident(Ident(String::from("x")))),
-                        ],
-                        alternative: None,
-                    },
-                ),
-            ],
+            vec![Stmt::Expr(Expr::If {
+                cond: Box::new(Expr::Infix(
+                    Infix::LessThan,
+                    Box::new(Expr::Ident(Ident(String::from("x")))),
+                    Box::new(Expr::Ident(Ident(String::from("y")))),
+                )),
+                consequence: vec![Stmt::Expr(Expr::Ident(Ident(String::from("x"))))],
+                alternative: None,
+            })],
             program,
         );
     }
@@ -713,19 +758,15 @@ return 993322;
 
         check_parse_errors(&mut parser);
         assert_eq!(
-            vec![
-                Stmt::Expr(
-                    Expr::If {
-                        cond: Box::new(Expr::Infix(Infix::LessThan, Box::new(Expr::Ident(Ident(String::from("x")))), Box::new(Expr::Ident(Ident(String::from("y")))))),
-                        consequence: vec![
-                            Stmt::Expr(Expr::Ident(Ident(String::from("x")))),
-                        ],
-                        alternative: Some(vec![
-                            Stmt::Expr(Expr::Ident(Ident(String::from("y"))))
-                        ]),
-                    },
-                ),
-            ],
+            vec![Stmt::Expr(Expr::If {
+                cond: Box::new(Expr::Infix(
+                    Infix::LessThan,
+                    Box::new(Expr::Ident(Ident(String::from("x")))),
+                    Box::new(Expr::Ident(Ident(String::from("y")))),
+                )),
+                consequence: vec![Stmt::Expr(Expr::Ident(Ident(String::from("x"))))],
+                alternative: Some(vec![Stmt::Expr(Expr::Ident(Ident(String::from("y"))))]),
+            })],
             program,
         );
     }
@@ -739,25 +780,14 @@ return 993322;
 
         check_parse_errors(&mut parser);
         assert_eq!(
-            vec![
-                Stmt::Expr(
-                    Expr::Func {
-                        params: vec![
-                            Ident(String::from("x")),
-                            Ident(String::from("y")),
-                        ],
-                        body: vec![
-                            Stmt::Expr(
-                                Expr::Infix(
-                                    Infix::Plus,
-                                    Box::new(Expr::Ident(Ident(String::from("x")))),
-                                    Box::new(Expr::Ident(Ident(String::from("y")))),
-                                ),
-                            ),
-                        ],
-                    },
-                ),
-            ],
+            vec![Stmt::Expr(Expr::Func {
+                params: vec![Ident(String::from("x")), Ident(String::from("y"))],
+                body: vec![Stmt::Expr(Expr::Infix(
+                    Infix::Plus,
+                    Box::new(Expr::Ident(Ident(String::from("x")))),
+                    Box::new(Expr::Ident(Ident(String::from("y")))),
+                ))],
+            })],
             program,
         );
     }
@@ -765,16 +795,16 @@ return 993322;
     #[test]
     fn test_func_params() {
         let tests = vec![
-            ("fn() {};", vec![
-            ]),
-            ("fn(x) {};", vec![
-                Ident(String::from("x")),
-            ]),
-            ("fn(x, y, z) {};", vec![
-                Ident(String::from("x")),
-                Ident(String::from("y")),
-                Ident(String::from("z")),
-            ]),
+            ("fn() {};", vec![]),
+            ("fn(x) {};", vec![Ident(String::from("x"))]),
+            (
+                "fn(x, y, z) {};",
+                vec![
+                    Ident(String::from("x")),
+                    Ident(String::from("y")),
+                    Ident(String::from("z")),
+                ],
+            ),
         ];
 
         for (input, expect) in tests {
@@ -783,14 +813,10 @@ return 993322;
 
             check_parse_errors(&mut parser);
             assert_eq!(
-                vec![
-                    Stmt::Expr(
-                        Expr::Func {
-                            params: expect,
-                            body: vec![],
-                        },
-                    ),
-                ],
+                vec![Stmt::Expr(Expr::Func {
+                    params: expect,
+                    body: vec![],
+                })],
                 program,
             );
         }
@@ -805,24 +831,22 @@ return 993322;
 
         check_parse_errors(&mut parser);
         assert_eq!(
-            vec![
-                Stmt::Expr(Expr::Call {
-                    func: Box::new(Expr::Ident(Ident(String::from("add")))),
-                    args: vec![
-                        Expr::Literal(Literal::Int(1)),
-                        Expr::Infix(
-                            Infix::Multiply,
-                            Box::new(Expr::Literal(Literal::Int(2))),
-                            Box::new(Expr::Literal(Literal::Int(3))),
-                        ),
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(Expr::Literal(Literal::Int(4))),
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                        ),
-                    ],
-                }),
-            ],
+            vec![Stmt::Expr(Expr::Call {
+                func: Box::new(Expr::Ident(Ident(String::from("add")))),
+                args: vec![
+                    Expr::Literal(Literal::Int(1)),
+                    Expr::Infix(
+                        Infix::Multiply,
+                        Box::new(Expr::Literal(Literal::Int(2))),
+                        Box::new(Expr::Literal(Literal::Int(3))),
+                    ),
+                    Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Literal(Literal::Int(4))),
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                    ),
+                ],
+            })],
             program,
         );
     }
@@ -830,360 +854,313 @@ return 993322;
     #[test]
     fn test_operator_precedence_parsing() {
         let tests = vec![
-            ("-a * b", Stmt::Expr(
-                Expr::Infix(
+            (
+                "-a * b",
+                Stmt::Expr(Expr::Infix(
                     Infix::Multiply,
-                    Box::new(Expr::Prefix(Prefix::Minus, Box::new(Expr::Ident(Ident(String::from("a")))))),
+                    Box::new(Expr::Prefix(
+                        Prefix::Minus,
+                        Box::new(Expr::Ident(Ident(String::from("a")))),
+                    )),
                     Box::new(Expr::Ident(Ident(String::from("b")))),
-                ),
-            )),
-            ("!-a", Stmt::Expr(
-                Expr::Prefix(
+                )),
+            ),
+            (
+                "!-a",
+                Stmt::Expr(Expr::Prefix(
                     Prefix::Not,
-                    Box::new(
-                        Expr::Prefix(
-                            Prefix::Minus,
-                            Box::new(Expr::Ident(Ident(String::from("a")))),
-                        ),
-                    ),
-                ),
-            )),
-            ("a + b + c", Stmt::Expr(
-                Expr::Infix(
+                    Box::new(Expr::Prefix(
+                        Prefix::Minus,
+                        Box::new(Expr::Ident(Ident(String::from("a")))),
+                    )),
+                )),
+            ),
+            (
+                "a + b + c",
+                Stmt::Expr(Expr::Infix(
                     Infix::Plus,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(Expr::Ident(Ident(String::from("a")))),
-                            Box::new(Expr::Ident(Ident(String::from("b")))),
-                        ),
-                    ),
+                    Box::new(Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Ident(Ident(String::from("a")))),
+                        Box::new(Expr::Ident(Ident(String::from("b")))),
+                    )),
                     Box::new(Expr::Ident(Ident(String::from("c")))),
-                ),
-            )),
-            ("a + b - c", Stmt::Expr(
-                Expr::Infix(
+                )),
+            ),
+            (
+                "a + b - c",
+                Stmt::Expr(Expr::Infix(
                     Infix::Minus,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(Expr::Ident(Ident(String::from("a")))),
-                            Box::new(Expr::Ident(Ident(String::from("b")))),
-                        ),
-                    ),
+                    Box::new(Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Ident(Ident(String::from("a")))),
+                        Box::new(Expr::Ident(Ident(String::from("b")))),
+                    )),
                     Box::new(Expr::Ident(Ident(String::from("c")))),
-                ),
-            )),
-            ("a * b * c", Stmt::Expr(
-                Expr::Infix(
+                )),
+            ),
+            (
+                "a * b * c",
+                Stmt::Expr(Expr::Infix(
                     Infix::Multiply,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Multiply,
-                            Box::new(Expr::Ident(Ident(String::from("a")))),
-                            Box::new(Expr::Ident(Ident(String::from("b")))),
-                        ),
-                    ),
+                    Box::new(Expr::Infix(
+                        Infix::Multiply,
+                        Box::new(Expr::Ident(Ident(String::from("a")))),
+                        Box::new(Expr::Ident(Ident(String::from("b")))),
+                    )),
                     Box::new(Expr::Ident(Ident(String::from("c")))),
-                ),
-            )),
-            ("a * b / c", Stmt::Expr(
-                Expr::Infix(
+                )),
+            ),
+            (
+                "a * b / c",
+                Stmt::Expr(Expr::Infix(
                     Infix::Divide,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Multiply,
-                            Box::new(Expr::Ident(Ident(String::from("a")))),
-                            Box::new(Expr::Ident(Ident(String::from("b")))),
-                        ),
-                    ),
+                    Box::new(Expr::Infix(
+                        Infix::Multiply,
+                        Box::new(Expr::Ident(Ident(String::from("a")))),
+                        Box::new(Expr::Ident(Ident(String::from("b")))),
+                    )),
                     Box::new(Expr::Ident(Ident(String::from("c")))),
-                ),
-            )),
-            ("a + b / c", Stmt::Expr(
-                Expr::Infix(
+                )),
+            ),
+            (
+                "a + b / c",
+                Stmt::Expr(Expr::Infix(
                     Infix::Plus,
                     Box::new(Expr::Ident(Ident(String::from("a")))),
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Divide,
-                            Box::new(Expr::Ident(Ident(String::from("b")))),
-                            Box::new(Expr::Ident(Ident(String::from("c")))),
-                        ),
-                    ),
-                ),
-            )),
-            ("a + b * c + d / e - f", Stmt::Expr(
-                Expr::Infix(
+                    Box::new(Expr::Infix(
+                        Infix::Divide,
+                        Box::new(Expr::Ident(Ident(String::from("b")))),
+                        Box::new(Expr::Ident(Ident(String::from("c")))),
+                    )),
+                )),
+            ),
+            (
+                "a + b * c + d / e - f",
+                Stmt::Expr(Expr::Infix(
                     Infix::Minus,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(
-                                Expr::Infix(
-                                    Infix::Plus,
-                                    Box::new(Expr::Ident(Ident(String::from("a")))),
-                                    Box::new(
-                                        Expr::Infix(
-                                            Infix::Multiply,
-                                            Box::new(Expr::Ident(Ident(String::from("b")))),
-                                            Box::new(Expr::Ident(Ident(String::from("c")))),
-                                        ),
-                                    ),
-                                ),
-                            ),
-                            Box::new(
-                                Expr::Infix(
-                                    Infix::Divide,
-                                    Box::new(Expr::Ident(Ident(String::from("d")))),
-                                    Box::new(Expr::Ident(Ident(String::from("e")))),
-                                ),
-                            ),
-                        ),
-                    ),
-                    Box::new(Expr::Ident(Ident(String::from("f")))),
-                ),
-            )),
-            ("5 > 4 == 3 < 4", Stmt::Expr(
-                Expr::Infix(
-                    Infix::Equal,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::GreaterThan,
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                            Box::new(Expr::Literal(Literal::Int(4))),
-                        ),
-                    ),
-                    Box::new(
-                        Expr::Infix(
-                            Infix::LessThan,
-                            Box::new(Expr::Literal(Literal::Int(3))),
-                            Box::new(Expr::Literal(Literal::Int(4))),
-                        ),
-                    ),
-                ),
-            )),
-            ("5 < 4 != 3 > 4", Stmt::Expr(
-                Expr::Infix(
-                    Infix::NotEqual,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::LessThan,
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                            Box::new(Expr::Literal(Literal::Int(4))),
-                        ),
-                    ),
-                    Box::new(
-                        Expr::Infix(
-                            Infix::GreaterThan,
-                            Box::new(Expr::Literal(Literal::Int(3))),
-                            Box::new(Expr::Literal(Literal::Int(4))),
-                        ),
-                    ),
-                ),
-            )),
-            ("5 >= 4 == 3 <= 4", Stmt::Expr(
-                Expr::Infix(
-                    Infix::Equal,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::GreaterThanEqual,
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                            Box::new(Expr::Literal(Literal::Int(4))),
-                        ),
-                    ),
-                    Box::new(
-                        Expr::Infix(
-                            Infix::LessThanEqual,
-                            Box::new(Expr::Literal(Literal::Int(3))),
-                            Box::new(Expr::Literal(Literal::Int(4))),
-                        ),
-                    ),
-                ),
-            )),
-            ("5 <= 4 != 3 >= 4", Stmt::Expr(
-                Expr::Infix(
-                    Infix::NotEqual,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::LessThanEqual,
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                            Box::new(Expr::Literal(Literal::Int(4))),
-                        ),
-                    ),
-                    Box::new(
-                        Expr::Infix(
-                            Infix::GreaterThanEqual,
-                            Box::new(Expr::Literal(Literal::Int(3))),
-                            Box::new(Expr::Literal(Literal::Int(4))),
-                        ),
-                    ),
-                ),
-            )),
-            ("3 + 4 * 5 == 3 * 1 + 4 * 5", Stmt::Expr(
-                Expr::Infix(
-                    Infix::Equal,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(Expr::Literal(Literal::Int(3))),
-                            Box::new(
-                                Expr::Infix(
-                                    Infix::Multiply,
-                                    Box::new(Expr::Literal(Literal::Int(4))),
-                                    Box::new(Expr::Literal(Literal::Int(5))),
-                                ),
-                            ),
-                        ),
-                    ),
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(
-                                Expr::Infix(
-                                    Infix::Multiply,
-                                    Box::new(Expr::Literal(Literal::Int(3))),
-                                    Box::new(Expr::Literal(Literal::Int(1))),
-                                ),
-                            ),
-                            Box::new(
-                                Expr::Infix(
-                                    Infix::Multiply,
-                                    Box::new(Expr::Literal(Literal::Int(4))),
-                                    Box::new(Expr::Literal(Literal::Int(5))),
-                                ),
-                            ),
-                        ),
-                    ),
-                ),
-            )),
-            ("true", Stmt::Expr(
-                Expr::Literal(Literal::Bool(true)),
-            )),
-            ("false", Stmt::Expr(
-                Expr::Literal(Literal::Bool(false)),
-            )),
-            ("3 > 5 == false", Stmt::Expr(
-                Expr::Infix(
-                    Infix::Equal,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::GreaterThan,
-                            Box::new(Expr::Literal(Literal::Int(3))),
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                        ),
-                    ),
-                    Box::new(Expr::Literal(Literal::Bool(false))),
-                ),
-            )),
-            ("3 < 5 == true", Stmt::Expr(
-                Expr::Infix(
-                    Infix::Equal,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::LessThan,
-                            Box::new(Expr::Literal(Literal::Int(3))),
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                        ),
-                    ),
-                    Box::new(Expr::Literal(Literal::Bool(true))),
-                ),
-            )),
-            ("1 + (2 + 3) + 4", Stmt::Expr(
-                Expr::Infix(
-                    Infix::Plus,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(Expr::Literal(Literal::Int(1))),
-                            Box::new(
-                                Expr::Infix(
-                                    Infix::Plus,
-                                    Box::new(Expr::Literal(Literal::Int(2))),
-                                    Box::new(Expr::Literal(Literal::Int(3))),
-                                ),
-                            ),
-                        ),
-                    ),
-                    Box::new(Expr::Literal(Literal::Int(4))),
-                ),
-            )),
-            ("(5 + 5) * 2", Stmt::Expr(
-                Expr::Infix(
-                    Infix::Multiply,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                        ),
-                    ),
-                    Box::new(Expr::Literal(Literal::Int(2))),
-                ),
-            )),
-            ("2 / (5 + 5)", Stmt::Expr(
-                Expr::Infix(
-                    Infix::Divide,
-                    Box::new(Expr::Literal(Literal::Int(2))),
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                        ),
-                    ),
-                ),
-            )),
-            ("-(5 + 5)", Stmt::Expr(
-                Expr::Prefix(
-                    Prefix::Minus,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                            Box::new(Expr::Literal(Literal::Int(5))),
-                        ),
-                    ),
-                ),
-            )),
-            ("!(true == true)", Stmt::Expr(
-                Expr::Prefix(
-                    Prefix::Not,
-                    Box::new(
-                        Expr::Infix(
-                            Infix::Equal,
-                            Box::new(Expr::Literal(Literal::Bool(true))),
-                            Box::new(Expr::Literal(Literal::Bool(true))),
-                        ),
-                    ),
-                ),
-            )),
-            ("a + add(b * c) + d", Stmt::Expr(
-                Expr::Infix(
-                    Infix::Plus,
-                    Box::new(
-                        Expr::Infix(
+                    Box::new(Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Infix(
                             Infix::Plus,
                             Box::new(Expr::Ident(Ident(String::from("a")))),
-                            Box::new(
-                                Expr::Call {
-                                    func: Box::new(Expr::Ident(Ident(String::from("add")))),
-                                    args: vec![
-                                        Expr::Infix(
-                                            Infix::Multiply,
-                                            Box::new(Expr::Ident(Ident(String::from("b")))),
-                                            Box::new(Expr::Ident(Ident(String::from("c")))),
-                                            ),
-                                    ],
-                                },
-                            ),
-                        ),
-                    ),
+                            Box::new(Expr::Infix(
+                                Infix::Multiply,
+                                Box::new(Expr::Ident(Ident(String::from("b")))),
+                                Box::new(Expr::Ident(Ident(String::from("c")))),
+                            )),
+                        )),
+                        Box::new(Expr::Infix(
+                            Infix::Divide,
+                            Box::new(Expr::Ident(Ident(String::from("d")))),
+                            Box::new(Expr::Ident(Ident(String::from("e")))),
+                        )),
+                    )),
+                    Box::new(Expr::Ident(Ident(String::from("f")))),
+                )),
+            ),
+            (
+                "5 > 4 == 3 < 4",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Equal,
+                    Box::new(Expr::Infix(
+                        Infix::GreaterThan,
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                        Box::new(Expr::Literal(Literal::Int(4))),
+                    )),
+                    Box::new(Expr::Infix(
+                        Infix::LessThan,
+                        Box::new(Expr::Literal(Literal::Int(3))),
+                        Box::new(Expr::Literal(Literal::Int(4))),
+                    )),
+                )),
+            ),
+            (
+                "5 < 4 != 3 > 4",
+                Stmt::Expr(Expr::Infix(
+                    Infix::NotEqual,
+                    Box::new(Expr::Infix(
+                        Infix::LessThan,
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                        Box::new(Expr::Literal(Literal::Int(4))),
+                    )),
+                    Box::new(Expr::Infix(
+                        Infix::GreaterThan,
+                        Box::new(Expr::Literal(Literal::Int(3))),
+                        Box::new(Expr::Literal(Literal::Int(4))),
+                    )),
+                )),
+            ),
+            (
+                "5 >= 4 == 3 <= 4",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Equal,
+                    Box::new(Expr::Infix(
+                        Infix::GreaterThanEqual,
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                        Box::new(Expr::Literal(Literal::Int(4))),
+                    )),
+                    Box::new(Expr::Infix(
+                        Infix::LessThanEqual,
+                        Box::new(Expr::Literal(Literal::Int(3))),
+                        Box::new(Expr::Literal(Literal::Int(4))),
+                    )),
+                )),
+            ),
+            (
+                "5 <= 4 != 3 >= 4",
+                Stmt::Expr(Expr::Infix(
+                    Infix::NotEqual,
+                    Box::new(Expr::Infix(
+                        Infix::LessThanEqual,
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                        Box::new(Expr::Literal(Literal::Int(4))),
+                    )),
+                    Box::new(Expr::Infix(
+                        Infix::GreaterThanEqual,
+                        Box::new(Expr::Literal(Literal::Int(3))),
+                        Box::new(Expr::Literal(Literal::Int(4))),
+                    )),
+                )),
+            ),
+            (
+                "3 + 4 * 5 == 3 * 1 + 4 * 5",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Equal,
+                    Box::new(Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Literal(Literal::Int(3))),
+                        Box::new(Expr::Infix(
+                            Infix::Multiply,
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                        )),
+                    )),
+                    Box::new(Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Infix(
+                            Infix::Multiply,
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                            Box::new(Expr::Literal(Literal::Int(1))),
+                        )),
+                        Box::new(Expr::Infix(
+                            Infix::Multiply,
+                            Box::new(Expr::Literal(Literal::Int(4))),
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                        )),
+                    )),
+                )),
+            ),
+            ("true", Stmt::Expr(Expr::Literal(Literal::Bool(true)))),
+            ("false", Stmt::Expr(Expr::Literal(Literal::Bool(false)))),
+            (
+                "3 > 5 == false",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Equal,
+                    Box::new(Expr::Infix(
+                        Infix::GreaterThan,
+                        Box::new(Expr::Literal(Literal::Int(3))),
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                    )),
+                    Box::new(Expr::Literal(Literal::Bool(false))),
+                )),
+            ),
+            (
+                "3 < 5 == true",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Equal,
+                    Box::new(Expr::Infix(
+                        Infix::LessThan,
+                        Box::new(Expr::Literal(Literal::Int(3))),
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                    )),
+                    Box::new(Expr::Literal(Literal::Bool(true))),
+                )),
+            ),
+            (
+                "1 + (2 + 3) + 4",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Plus,
+                    Box::new(Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Literal(Literal::Int(1))),
+                        Box::new(Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Literal(Literal::Int(2))),
+                            Box::new(Expr::Literal(Literal::Int(3))),
+                        )),
+                    )),
+                    Box::new(Expr::Literal(Literal::Int(4))),
+                )),
+            ),
+            (
+                "(5 + 5) * 2",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Multiply,
+                    Box::new(Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                    )),
+                    Box::new(Expr::Literal(Literal::Int(2))),
+                )),
+            ),
+            (
+                "2 / (5 + 5)",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Divide,
+                    Box::new(Expr::Literal(Literal::Int(2))),
+                    Box::new(Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                    )),
+                )),
+            ),
+            (
+                "-(5 + 5)",
+                Stmt::Expr(Expr::Prefix(
+                    Prefix::Minus,
+                    Box::new(Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                        Box::new(Expr::Literal(Literal::Int(5))),
+                    )),
+                )),
+            ),
+            (
+                "!(true == true)",
+                Stmt::Expr(Expr::Prefix(
+                    Prefix::Not,
+                    Box::new(Expr::Infix(
+                        Infix::Equal,
+                        Box::new(Expr::Literal(Literal::Bool(true))),
+                        Box::new(Expr::Literal(Literal::Bool(true))),
+                    )),
+                )),
+            ),
+            (
+                "a + add(b * c) + d",
+                Stmt::Expr(Expr::Infix(
+                    Infix::Plus,
+                    Box::new(Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Ident(Ident(String::from("a")))),
+                        Box::new(Expr::Call {
+                            func: Box::new(Expr::Ident(Ident(String::from("add")))),
+                            args: vec![Expr::Infix(
+                                Infix::Multiply,
+                                Box::new(Expr::Ident(Ident(String::from("b")))),
+                                Box::new(Expr::Ident(Ident(String::from("c")))),
+                            )],
+                        }),
+                    )),
                     Box::new(Expr::Ident(Ident(String::from("d")))),
-                ),
-            )),
-            ("add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", Stmt::Expr(
-                Expr::Call {
+                )),
+            ),
+            (
+                "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+                Stmt::Expr(Expr::Call {
                     func: Box::new(Expr::Ident(Ident(String::from("add")))),
                     args: vec![
                         Expr::Ident(Ident(String::from("a"))),
@@ -1211,44 +1188,35 @@ return 993322;
                             ],
                         },
                     ],
-                },
-            )),
-            ("add(a + b + c * d / f + g)", Stmt::Expr(
-                Expr::Call {
+                }),
+            ),
+            (
+                "add(a + b + c * d / f + g)",
+                Stmt::Expr(Expr::Call {
                     func: Box::new(Expr::Ident(Ident(String::from("add")))),
-                    args: vec![
-                        Expr::Infix(
+                    args: vec![Expr::Infix(
+                        Infix::Plus,
+                        Box::new(Expr::Infix(
                             Infix::Plus,
-                            Box::new(
-                                Expr::Infix(
-                                    Infix::Plus,
-                                    Box::new(
-                                        Expr::Infix(
-                                            Infix::Plus,
-                                            Box::new(Expr::Ident(Ident(String::from("a")))),
-                                            Box::new(Expr::Ident(Ident(String::from("b")))),
-                                        ),
-                                    ),
-                                    Box::new(
-                                        Expr::Infix(
-                                            Infix::Divide,
-                                            Box::new(
-                                                Expr::Infix(
-                                                    Infix::Multiply,
-                                                    Box::new(Expr::Ident(Ident(String::from("c")))),
-                                                    Box::new(Expr::Ident(Ident(String::from("d")))),
-                                                ),
-                                            ),
-                                            Box::new(Expr::Ident(Ident(String::from("f")))),
-                                        ),
-                                    ),
-                                ),
-                            ),
-                            Box::new(Expr::Ident(Ident(String::from("g")))),
-                        ),
-                    ],
-                },
-            )),
+                            Box::new(Expr::Infix(
+                                Infix::Plus,
+                                Box::new(Expr::Ident(Ident(String::from("a")))),
+                                Box::new(Expr::Ident(Ident(String::from("b")))),
+                            )),
+                            Box::new(Expr::Infix(
+                                Infix::Divide,
+                                Box::new(Expr::Infix(
+                                    Infix::Multiply,
+                                    Box::new(Expr::Ident(Ident(String::from("c")))),
+                                    Box::new(Expr::Ident(Ident(String::from("d")))),
+                                )),
+                                Box::new(Expr::Ident(Ident(String::from("f")))),
+                            )),
+                        )),
+                        Box::new(Expr::Ident(Ident(String::from("g")))),
+                    )],
+                }),
+            ),
         ];
 
         for (input, expect) in tests {

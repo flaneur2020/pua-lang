@@ -160,6 +160,11 @@ impl Evaluator {
             } else {
                 Self::error(String::from(format!("type mismatch: {} {} {}", left, infix, right)))
             },
+            Object::String(left_value) => if let Object::String(right_value) = right {
+                self.eval_infix_string_expr(infix, left_value, right_value)
+            } else {
+                Self::error(String::from(format!("type mismatch: {} {} {}", left_value, infix, right)))
+            },
             _ => Self::error(String::from(format!("unknown operator: {} {} {}", left, infix, right))),
         }
     }
@@ -179,10 +184,18 @@ impl Evaluator {
         }
     }
 
+    fn eval_infix_string_expr(&mut self, infix: Infix, left: String, right: String) -> Object {
+        match infix {
+            Infix::Plus => Object::String(format!("{}{}", left, right)),
+            _ => Object::Error(String::from(format!("unknown operator: {} {} {}", left, infix, right))),
+        }
+    }
+
     fn eval_literal(&mut self, literal: Literal) -> Object {
         match literal {
             Literal::Int(value) => Object::Int(value),
             Literal::Bool(value) => Object::Bool(value),
+            Literal::String(value) => Object::String(value),
         }
     }
 
@@ -268,6 +281,20 @@ mod tests {
         for (input, expect) in tests {
             assert_eq!(expect, eval(input));
         }
+    }
+
+    #[test]
+    fn test_string_expr() {
+        let input = "\"Hello World!\"";
+
+        assert_eq!(Some(Object::String(String::from("Hello World!"))), eval(input));
+    }
+
+    #[test]
+    fn test_string_concatenation() {
+        let input = "\"Hello\" + \" \" + \"World!\"";
+
+        assert_eq!(Some(Object::String(String::from("Hello World!"))), eval(input));
     }
 
     #[test]
@@ -426,6 +453,7 @@ addTwo(2);
             ("-true", Some(Object::Error(String::from("unknown operator: -true")))),
             ("5; true + false; 5;", Some(Object::Error(String::from("unknown operator: true + false")))),
             ("if (10 > 1) { true + false; }", Some(Object::Error(String::from("unknown operator: true + false")))),
+            ("\"Hello\" - \"World\"", Some(Object::Error(String::from("unknown operator: Hello - World")))),
             (r#"
 if (10 > 1) {
   if (10 > 1) {
