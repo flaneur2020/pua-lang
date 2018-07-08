@@ -1,7 +1,7 @@
-use std::io::{Stdin, Stdout, Write};
+use evaluator::Evaluator;
 use lexer::Lexer;
 use parser::Parser;
-use evaluator::Evaluator;
+use std::io::{Stdin, Stdout, Write};
 
 pub fn start(stdin: Stdin, stdout: Stdout) {
     let mut evaluator = Evaluator::new();
@@ -22,17 +22,17 @@ pub fn start(stdin: Stdin, stdout: Stdout) {
 
         if errors.len() > 0 {
             for err in errors {
-                out.write(format!("{}", err).as_bytes());
+                out.write(format!("{}", err).as_bytes()).unwrap();
             }
-            out.flush();
+            out.flush().unwrap();
             continue;
         }
 
-        let evaluated = evaluator.eval(program);
+        if let Some(evaluated) = evaluator.eval(program) {
+            out.write(format!("{}", evaluated).as_bytes()).unwrap();
+            out.write(b"\n").unwrap();
+        }
 
-        out.write(format!("{}", evaluated).as_bytes());
-
-        out.write(b"\n").unwrap();
         out.flush().unwrap();
     }
 }
