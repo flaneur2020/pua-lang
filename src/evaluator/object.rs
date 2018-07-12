@@ -4,12 +4,15 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 
+pub type BuiltinFunc = fn(Vec<Object>) -> Object;
+
 #[derive(PartialEq, Clone, Debug)]
 pub enum Object {
     Int(i64),
     String(String),
     Bool(bool),
     Func(Vec<Ident>, BlockStmt, Rc<RefCell<Env>>),
+    Builtin(BuiltinFunc),
     Null,
     ReturnValue(Box<Object>),
     Error(String),
@@ -28,6 +31,7 @@ impl fmt::Display for Object {
                 }
                 write!(f, "fn({}) {{ ... }}", param_string)
             }
+            Object::Builtin(_) => write!(f, "[builtin function]"),
             Object::Null => write!(f, "null"),
             Object::ReturnValue(ref value) => write!(f, "{}", value),
             Object::Error(ref value) => write!(f, "{}", value),
