@@ -13,7 +13,7 @@ pub enum Object {
     Bool(bool),
     Array(Vec<Object>),
     Func(Vec<Ident>, BlockStmt, Rc<RefCell<Env>>),
-    Builtin(BuiltinFunc),
+    Builtin(usize, BuiltinFunc),
     Null,
     ReturnValue(Box<Object>),
     Error(String),
@@ -27,10 +27,8 @@ impl fmt::Display for Object {
             Object::Bool(ref value) => write!(f, "{}", value),
             Object::Array(ref objects) => {
                 let mut result = String::new();
-                let mut first = true;
-                for obj in objects {
-                    if first {
-                        first = false;
+                for (i, obj) in objects.iter().enumerate() {
+                    if i < 1 {
                         result.push_str(&format!("{}", obj));
                     } else {
                         result.push_str(&format!(", {}", obj));
@@ -39,13 +37,17 @@ impl fmt::Display for Object {
                 write!(f, "[{}]", result)
             }
             Object::Func(ref params, _, _) => {
-                let mut param_string = String::new();
-                for Ident(s) in params {
-                    param_string.push_str(&s);
+                let mut result = String::new();
+                for (i, Ident(ref s)) in params.iter().enumerate() {
+                    if i < 1 {
+                        result.push_str(&format!("{}", s));
+                    } else {
+                        result.push_str(&format!(", {}", s));
+                    }
                 }
-                write!(f, "fn({}) {{ ... }}", param_string)
+                write!(f, "fn({}) {{ ... }}", result)
             }
-            Object::Builtin(_) => write!(f, "[builtin function]"),
+            Object::Builtin(_, _) => write!(f, "[builtin function]"),
             Object::Null => write!(f, "null"),
             Object::ReturnValue(ref value) => write!(f, "{}", value),
             Object::Error(ref value) => write!(f, "{}", value),

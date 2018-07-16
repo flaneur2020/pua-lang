@@ -83,7 +83,7 @@ impl Evaluator {
                 } else {
                     let Ident(name) = ident;
                     self.env.borrow_mut().set(name, &value);
-                    None
+                    Some(value)
                 }
             },
             Stmt::Expr(expr) => self.eval_expr(expr),
@@ -152,7 +152,7 @@ impl Evaluator {
         match prefix {
             Prefix::Not => self.eval_not_op_expr(right),
             Prefix::Minus => self.eval_minus_prefix_op_expr(right),
-            _ => Self::error(String::from(format!("unknown operator: {} {}", prefix, right))),
+            _ => Self::error(format!("unknown operator: {} {}", prefix, right)),
         }
     }
 
@@ -168,7 +168,7 @@ impl Evaluator {
     fn eval_minus_prefix_op_expr(&mut self, right: Object) -> Object {
         match right {
             Object::Int(value) => Object::Int(-value),
-            _ => Self::error(String::from(format!("unknown operator: -{}", right))),
+            _ => Self::error(format!("unknown operator: -{}", right)),
         }
     }
 
@@ -177,14 +177,14 @@ impl Evaluator {
             Object::Int(left_value) => if let Object::Int(right_value) = right {
                 self.eval_infix_int_expr(infix, left_value, right_value)
             } else {
-                Self::error(String::from(format!("type mismatch: {} {} {}", left, infix, right)))
+                Self::error(format!("type mismatch: {} {} {}", left, infix, right))
             },
             Object::String(left_value) => if let Object::String(right_value) = right {
                 self.eval_infix_string_expr(infix, left_value, right_value)
             } else {
-                Self::error(String::from(format!("type mismatch: {} {} {}", left_value, infix, right)))
+                Self::error(format!("type mismatch: {} {} {}", left_value, infix, right))
             },
-            _ => Self::error(String::from(format!("unknown operator: {} {} {}", left, infix, right))),
+            _ => Self::error(format!("unknown operator: {} {} {}", left, infix, right)),
         }
     }
 
@@ -193,9 +193,9 @@ impl Evaluator {
             Object::Array(ref array) => if let Object::Int(i) = index {
                 self.eval_array_index_expr(array.clone(), i)
             } else {
-                Self::error(String::from(format!("index operator not supported: {}", left)))
+                Self::error(format!("index operator not supported: {}", left))
             }
-            _ => Self::error(String::from(format!("uknown operator: {} {}", left, index))),
+            _ => Self::error(format!("uknown operator: {} {}", left, index)),
         }
     }
 
@@ -271,13 +271,23 @@ impl Evaluator {
 
         let (params, body, env) = match self.eval_expr(*func) {
             Some(Object::Func(params, body, env)) => (params, body, env),
-            Some(Object::Builtin(f)) => return f(args),
-            Some(o) => return Object::Error(format!("{} is not valid function", o)),
+            Some(Object::Builtin(expect_param_num, f)) => {
+                if expect_param_num == args.len() {
+                    return f(args);
+                } else {
+                    return Self::error(format!(
+                        "wrong number of arguments. got={}, want={}",
+                        args.len(),
+                        expect_param_num,
+                    ));
+                }
+            }
+            Some(o) => return Self::error(format!("{} is not valid function", o)),
             None => return Object::Null,
         };
 
         if params.len() != args.len() {
-            return Object::Error(format!("wrong number of arguments: {} expected but {} given", params.len(), args.len()));
+            return Self::error(format!("wrong number of arguments: {} expected but {} given", params.len(), args.len()));
         }
 
         let current_env = Rc::clone(&self.env);
@@ -507,6 +517,7 @@ if (10 > 1) {
             ("let add = fn(x, y) { x + y; }; add(5, 5);", Some(Object::Int(10))),
             ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", Some(Object::Int(20))),
             ("fn(x) { x; }(5)", Some(Object::Int(5))),
+            ("fn(a) { let f = fn(b) { a + b }; f(a); }(5);", Some(Object::Int(10))),
         ];
 
         for (input, expect) in tests {
@@ -531,11 +542,44 @@ addTwo(2);
     #[test]
     fn test_builtin_functions() {
         let tests = vec![
+            // len
             ("len(\"\")", Some(Object::Int(0))),
             ("len(\"four\")", Some(Object::Int(4))),
             ("len(\"hello world\")", Some(Object::Int(11))),
+            ("len([1, 2, 3])", Some(Object::Int(3))),
             ("len(1)", Some(Object::Error(String::from("argument to `len` not supported, got 1")))),
             ("len(\"one\", \"two\")", Some(Object::Error(String::from("wrong number of arguments. got=2, want=1")))),
+
+            // first
+            ("first([1, 2, 3])", Some(Object::Int(1))),
+            ("first([])", Some(Object::Null)),
+            ("first([], [])", Some(Object::Error(String::from("wrong number of arguments. got=2, want=1")))),
+            ("first(\"string\")", Some(Object::Error(String::from("argument to `first` must be array. got string")))),
+            ("first(1)", Some(Object::Error(String::from("argument to `first` must be array. got 1")))),
+
+            // last
+            ("last([1, 2, 3])", Some(Object::Int(3))),
+            ("last([])", Some(Object::Null)),
+            ("last([], [])", Some(Object::Error(String::from("wrong number of arguments. got=2, want=1")))),
+            ("last(\"string\")", Some(Object::Error(String::from("argument to `last` must be array. got string")))),
+            ("last(1)", Some(Object::Error(String::from("argument to `last` must be array. got 1")))),
+
+            // rest
+            ("rest([1, 2, 3, 4])", Some(Object::Array(vec![Object::Int(2), Object::Int(3), Object::Int(4)]))),
+            ("rest([2, 3, 4])", Some(Object::Array(vec![Object::Int(3), Object::Int(4)]))),
+            ("rest([4])", Some(Object::Array(vec![]))),
+            ("rest([])", Some(Object::Null)),
+            ("rest([], [])", Some(Object::Error(String::from("wrong number of arguments. got=2, want=1")))),
+            ("rest(\"string\")", Some(Object::Error(String::from("argument to `rest` must be array. got string")))),
+            ("rest(1)", Some(Object::Error(String::from("argument to `rest` must be array. got 1")))),
+
+            // push
+            ("push([1, 2, 3], 4)", Some(Object::Array(vec![Object::Int(1), Object::Int(2), Object::Int(3), Object::Int(4)]))),
+            ("push([], 1)", Some(Object::Array(vec![Object::Int(1)]))),
+            ("let a = [1]; push(a, 2); a", Some(Object::Array(vec![Object::Int(1)]))),
+            ("push([], [], [])", Some(Object::Error(String::from("wrong number of arguments. got=3, want=2")))),
+            ("push(\"string\", 1)", Some(Object::Error(String::from("argument to `push` must be array. got string")))),
+            ("push(1, 1)", Some(Object::Error(String::from("argument to `push` must be array. got 1")))),
         ];
 
         for (input, expect) in tests {
