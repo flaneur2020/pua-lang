@@ -11,6 +11,7 @@ pub enum Object {
     Int(i64),
     String(String),
     Bool(bool),
+    Array(Vec<Object>),
     Func(Vec<Ident>, BlockStmt, Rc<RefCell<Env>>),
     Builtin(BuiltinFunc),
     Null,
@@ -24,6 +25,19 @@ impl fmt::Display for Object {
             Object::Int(ref value) => write!(f, "{}", value),
             Object::String(ref value) => write!(f, "{}", value),
             Object::Bool(ref value) => write!(f, "{}", value),
+            Object::Array(ref objects) => {
+                let mut result = String::new();
+                let mut first = true;
+                for obj in objects {
+                    if first {
+                        first = false;
+                        result.push_str(&format!("{}", obj));
+                    } else {
+                        result.push_str(&format!(", {}", obj));
+                    }
+                }
+                write!(f, "[{}]", result)
+            }
             Object::Func(ref params, _, _) => {
                 let mut param_string = String::new();
                 for Ident(s) in params {

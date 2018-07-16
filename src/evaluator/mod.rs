@@ -119,6 +119,15 @@ impl Evaluator {
                     None
                 }
             },
+            Expr::Index(left_expr, index_expr) => {
+                let left = self.eval_expr(*left_expr);
+                let index = self.eval_expr(*index_expr);
+                if left.is_some() && index.is_some() {
+                    Some(self.eval_index_expr(left.unwrap(), index.unwrap()))
+                } else {
+                    None
+                }
+            },
             Expr::If { cond, consequence, alternative } => self.eval_if_expr(*cond, consequence, alternative),
             Expr::Func { params, body } => Some(Object::Func(params, body, Rc::clone(&self.env))),
             Expr::Call { func, args } => Some(self.eval_call_expr(func, args)),
@@ -179,6 +188,30 @@ impl Evaluator {
         }
     }
 
+    fn eval_index_expr(&mut self, left: Object, index: Object) -> Object {
+        match left {
+            Object::Array(ref array) => if let Object::Int(i) = index {
+                self.eval_array_index_expr(array.clone(), i)
+            } else {
+                Self::error(String::from(format!("index operator not supported: {}", left)))
+            }
+            _ => Self::error(String::from(format!("uknown operator: {} {}", left, index))),
+        }
+    }
+
+    fn eval_array_index_expr(&mut self, array: Vec<Object>, index: i64) -> Object {
+        let max = array.len() as i64;
+
+        if index < 0 || index > max {
+            return Object::Null;
+        }
+
+        match array.get(index as usize) {
+            Some(o) => o.clone(),
+            None => Object::Null,
+        }
+    }
+
     fn eval_infix_int_expr(&mut self, infix: Infix, left: i64, right: i64) -> Object {
         match infix {
             Infix::Plus => Object::Int(left + right),
@@ -206,6 +239,12 @@ impl Evaluator {
             Literal::Int(value) => Object::Int(value),
             Literal::Bool(value) => Object::Bool(value),
             Literal::String(value) => Object::String(value),
+            Literal::Array(objects) => Object::Array(
+                objects
+                    .iter()
+                    .map(|e| self.eval_expr(e.clone()).unwrap_or(Object::Null))
+                    .collect::<Vec<_>>()
+            ),
         }
     }
 
@@ -326,6 +365,39 @@ mod tests {
             ("1 != 1", Some(Object::Bool(false))),
             ("1 == 2", Some(Object::Bool(false))),
             ("1 != 2", Some(Object::Bool(true))),
+        ];
+
+        for (input, expect) in tests {
+            assert_eq!(expect, eval(input));
+        }
+    }
+
+    #[test]
+    fn test_array_literal() {
+        let input = "[1, 2 * 2, 3 + 3]";
+
+        assert_eq!(
+            Some(Object::Array(vec![
+               Object::Int(1),
+               Object::Int(4),
+               Object::Int(6),
+            ])),
+            eval(input),
+        );
+    }
+
+    #[test]
+    fn test_array_index_expr() {
+        let tests = vec![
+            ("[1, 2, 3][0]", Some(Object::Int(1))),
+            ("[1, 2, 3][1]", Some(Object::Int(2))),
+            ("let i = 0; [1][i]", Some(Object::Int(1))),
+            ("[1, 2, 3][1 + 1];", Some(Object::Int(3))),
+            ("let myArray = [1, 2, 3]; myArray[2];", Some(Object::Int(3))),
+            ("let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];", Some(Object::Int(6))),
+            ("let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];", Some(Object::Int(2))),
+            ("[1, 2, 3][3]", Some(Object::Null)),
+            ("[1, 2, 3][-1]", Some(Object::Null)),
         ];
 
         for (input, expect) in tests {

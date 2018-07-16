@@ -57,6 +57,7 @@ pub enum Expr {
     Literal(Literal),
     Prefix(Prefix, Box<Expr>),
     Infix(Infix, Box<Expr>, Box<Expr>),
+    Index(Box<Expr>, Box<Expr>),
     If {
         cond: Box<Expr>,
         consequence: BlockStmt,
@@ -77,6 +78,7 @@ pub enum Literal {
     Int(i64),
     String(String),
     Bool(bool),
+    Array(Vec<Expr>),
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -99,4 +101,5 @@ pub enum Precedence {
     Product,     // *
     Prefix,      // -X or !X
     Call,        // myFunction(x)
+    Index,       // array[index]
 }
