@@ -195,6 +195,18 @@ impl Evaluator {
             } else {
                 Self::error(format!("index operator not supported: {}", left))
             }
+            Object::Hash(ref hash) => {
+                match index {
+                    Object::Int(_) | Object::Bool(_) | Object::String(_) => {
+                        match hash.get(&index) {
+                            Some(o) => o.clone(),
+                            None => Object::Null,
+                        }
+                    },
+                    Object::Error(_) => index,
+                    _ => Self::error(format!("unusable as hash key: {}", index)),
+                }
+            }
             _ => Self::error(format!("uknown operator: {} {}", left, index)),
         }
     }
@@ -239,13 +251,38 @@ impl Evaluator {
             Literal::Int(value) => Object::Int(value),
             Literal::Bool(value) => Object::Bool(value),
             Literal::String(value) => Object::String(value),
-            Literal::Array(objects) => Object::Array(
-                objects
-                    .iter()
-                    .map(|e| self.eval_expr(e.clone()).unwrap_or(Object::Null))
-                    .collect::<Vec<_>>()
-            ),
+            Literal::Array(objects) => self.eval_array_literal(objects),
+            Literal::Hash(pairs) => self.eval_hash_literal(pairs),
         }
+    }
+
+    fn eval_array_literal(&mut self, objects: Vec<Expr>) -> Object {
+        Object::Array(
+            objects
+                .iter()
+                .map(|e| self.eval_expr(e.clone()).unwrap_or(Object::Null))
+                .collect::<Vec<_>>()
+        )
+    }
+
+    fn eval_hash_literal(&mut self, pairs: Vec<(Expr, Expr)>) -> Object {
+        let mut hash = HashMap::new();
+
+        for (key_expr, value_expr) in pairs {
+            let key = self.eval_expr(key_expr).unwrap_or(Object::Null);
+            if Self::is_error(&key) {
+                return key;
+            }
+
+            let value = self.eval_expr(value_expr).unwrap_or(Object::Null);
+            if Self::is_error(&value) {
+                return value;
+            }
+
+            hash.insert(key, value);
+        }
+
+        Object::Hash(hash)
     }
 
     fn eval_if_expr(&mut self, cond: Expr, consequence: BlockStmt, alternative: Option<BlockStmt>) -> Option<Object> {
@@ -408,6 +445,51 @@ mod tests {
             ("let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];", Some(Object::Int(2))),
             ("[1, 2, 3][3]", Some(Object::Null)),
             ("[1, 2, 3][-1]", Some(Object::Null)),
+        ];
+
+        for (input, expect) in tests {
+            assert_eq!(expect, eval(input));
+        }
+    }
+
+    #[test]
+    fn test_hash_literal() {
+        let input = r#"
+let two = "two";
+{
+  "one": 10 - 9,
+  two: 1 + 1,
+  "thr" + "ee": 6 / 2,
+  4: 4,
+  true: 5,
+  false: 6
+}
+"#;
+
+        let mut hash = HashMap::new();
+        hash.insert(Object::String(String::from("one")), Object::Int(1));
+        hash.insert(Object::String(String::from("two")), Object::Int(2));
+        hash.insert(Object::String(String::from("three")), Object::Int(3));
+        hash.insert(Object::Int(4), Object::Int(4));
+        hash.insert(Object::Bool(true), Object::Int(5));
+        hash.insert(Object::Bool(false), Object::Int(6));
+
+        assert_eq!(
+            Some(Object::Hash(hash)),
+            eval(input),
+        );
+    }
+
+    #[test]
+    fn test_hash_index_expr() {
+        let tests = vec![
+            ("{\"foo\": 5}[\"foo\"]", Some(Object::Int(5))),
+            ("{\"foo\": 5}[\"bar\"]", Some(Object::Null)),
+            ("let key = \"foo\"; {\"foo\": 5}[key]", Some(Object::Int(5))),
+            ("{}[\"foo\"]", Some(Object::Null)),
+            ("{5: 5}[5]", Some(Object::Int(5))),
+            ("{true: 5}[true]", Some(Object::Int(5))),
+            ("{false: 5}[false]", Some(Object::Int(5))),
         ];
 
         for (input, expect) in tests {
@@ -604,6 +686,7 @@ if (10 > 1) {
   return 1;
 }"#, Some(Object::Error(String::from("unknown operator: true + false")))),
             ("foobar", Some(Object::Error(String::from("identifier not found: foobar")))),
+            ("{\"name\": \"Monkey\"}[fn(x) { x }]", Some(Object::Error(String::from("unusable as hash key: fn(x) { ... }")))),
         ];
 
         for (input, expect) in tests {

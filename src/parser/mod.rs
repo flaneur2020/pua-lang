@@ -112,7 +112,7 @@ impl<'a> Parser<'a> {
         self.errors.push(ParseError::new(
             ParseErrorKind::UnexpectedToken,
             format!(
-                "no prefix parse function for %s found \"{:?}\"",
+                "no prefix parse function for  \"{:?}\" found",
                 self.current_token,
             ),
         ));
@@ -220,6 +220,7 @@ impl<'a> Parser<'a> {
             Token::String(_) => self.parse_string_expr(),
             Token::Bool(_) => self.parse_bool_expr(),
             Token::Lbracket => self.parse_array_expr(),
+            Token::Lbrace => self.parse_hash_expr(),
             Token::Bang | Token::Minus => self.parse_prefix_expr(),
             Token::Lparen => self.parse_grouped_expr(),
             Token::If => self.parse_if_expr(),
@@ -301,6 +302,42 @@ impl<'a> Parser<'a> {
             Some(list) => Some(Expr::Literal(Literal::Array(list))),
             None => None,
         }
+    }
+
+    fn parse_hash_expr(&mut self) -> Option<Expr> {
+        let mut pairs = Vec::new();
+
+        while !self.next_token_is(&Token::Rbrace) {
+            self.bump();
+
+            let key = match self.parse_expr(Precedence::Lowest) {
+                Some(expr) => expr,
+                None => return None,
+            };
+
+            if !self.expect_next_token(Token::Colon) {
+                return None;
+            }
+
+            self.bump();
+
+            let value = match self.parse_expr(Precedence::Lowest) {
+                Some(expr) => expr,
+                None => return None,
+            };
+
+            pairs.push((key, value));
+
+            if !self.next_token_is(&Token::Rbrace) && !self.expect_next_token(Token::Comma) {
+                return None;
+            }
+        }
+
+        if !self.expect_next_token(Token::Rbrace) {
+            return None;
+        }
+
+        Some(Expr::Literal(Literal::Hash(pairs)))
     }
 
     fn parse_expr_list(&mut self, end: Token) -> Option<Vec<Expr>> {
@@ -657,6 +694,74 @@ return 993322;
             ])))],
             program,
         );
+    }
+
+    #[test]
+    fn test_hash_literal_expr() {
+        let tests = vec![
+            ("{}", Stmt::Expr(Expr::Literal(Literal::Hash(vec![])))),
+            (
+                "{\"one\": 1, \"two\": 2, \"three\": 3}",
+                Stmt::Expr(Expr::Literal(Literal::Hash(vec![
+                    (
+                        Expr::Literal(Literal::String(String::from("one"))),
+                        Expr::Literal(Literal::Int(1)),
+                    ),
+                    (
+                        Expr::Literal(Literal::String(String::from("two"))),
+                        Expr::Literal(Literal::Int(2)),
+                    ),
+                    (
+                        Expr::Literal(Literal::String(String::from("three"))),
+                        Expr::Literal(Literal::Int(3)),
+                    ),
+                ]))),
+            ),
+            (
+                "{\"one\": 0 + 1, \"two\": 10 - 8, \"three\": 15 / 5}",
+                Stmt::Expr(Expr::Literal(Literal::Hash(vec![
+                    (
+                        Expr::Literal(Literal::String(String::from("one"))),
+                        Expr::Infix(
+                            Infix::Plus,
+                            Box::new(Expr::Literal(Literal::Int(0))),
+                            Box::new(Expr::Literal(Literal::Int(1))),
+                        ),
+                    ),
+                    (
+                        Expr::Literal(Literal::String(String::from("two"))),
+                        Expr::Infix(
+                            Infix::Minus,
+                            Box::new(Expr::Literal(Literal::Int(10))),
+                            Box::new(Expr::Literal(Literal::Int(8))),
+                        ),
+                    ),
+                    (
+                        Expr::Literal(Literal::String(String::from("three"))),
+                        Expr::Infix(
+                            Infix::Divide,
+                            Box::new(Expr::Literal(Literal::Int(15))),
+                            Box::new(Expr::Literal(Literal::Int(5))),
+                        ),
+                    ),
+                ]))),
+            ),
+            (
+                "{key: \"value\"}",
+                Stmt::Expr(Expr::Literal(Literal::Hash(vec![(
+                    Expr::Ident(Ident(String::from("key"))),
+                    Expr::Literal(Literal::String(String::from("value"))),
+                )]))),
+            ),
+        ];
+
+        for (input, expect) in tests {
+            let mut parser = Parser::new(Lexer::new(input));
+            let program = parser.parse();
+
+            check_parse_errors(&mut parser);
+            assert_eq!(vec![expect], program);
+        }
     }
 
     #[test]

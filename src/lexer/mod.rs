@@ -104,6 +104,7 @@ impl<'a> Lexer<'a> {
             b']' => Token::Rbracket,
             b',' => Token::Comma,
             b';' => Token::Semicolon,
+            b':' => Token::Colon,
             b'a'...b'z' | b'A'...b'Z' | b'_' => {
                 return self.consume_identifier();
             }
@@ -221,6 +222,8 @@ if (5 < 10) {
 "foo bar";
 
 [1, 2];
+
+{"foo": "bar"};
 "#;
 
         let tests = vec![
@@ -314,6 +317,12 @@ if (5 < 10) {
             Token::Comma,
             Token::Int(2),
             Token::Rbracket,
+            Token::Semicolon,
+            Token::Lbrace,
+            Token::String(String::from("foo")),
+            Token::Colon,
+            Token::String(String::from("bar")),
+            Token::Rbrace,
             Token::Semicolon,
             Token::Eof,
         ];

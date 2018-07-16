@@ -79,6 +79,7 @@ pub enum Literal {
     String(String),
     Bool(bool),
     Array(Vec<Expr>),
+    Hash(Vec<(Expr, Expr)>),
 }
 
 #[derive(PartialEq, Clone, Debug)]
