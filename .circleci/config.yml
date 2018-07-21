@@ -1,0 +1,49 @@
+version: 2
+
+references:
+  container_config: &container_config
+    docker:
+      - image: rust:1.27
+        environment:
+          TZ: "/usr/share/zoneinfo/Asia/Tokyo"
+    working_directory: ~/workspace
+    environment:
+      - TZ: "/usr/share/zoneinfo/Asia/Tokyo"
+
+  deps_cache_config: &deps_cache_config
+    key: dependencies-{{ arch }}-{{ .Branch }}-{{ checksum "Cargo.lock" }}
+    paths:
+      - .
+
+  deps_restore_cache: &deps_restore_cache
+    restore_cache:
+      <<: *deps_cache_config
+      name: Restore dependencies cache
+
+  deps_save_cache: &deps_save_cache
+    restore_cache:
+      <<: *deps_cache_config
+      name: Save dependencies cache
+
+  version_info: &version_info
+    run:
+      name: Version infomation
+      command: |
+        rustc --version
+        rustup --version
+        cargo --version
+
+jobs:
+  build:
+    <<: *container_config
+    steps:
+      - checkout
+      - *version_info
+      - *deps_restore_cache
+      - run:
+          name: cargo build
+          command: cargo build --verbose
+      - *deps_save_cache
+      - run:
+          name: cargo test
+          command: cargo test --verbose
