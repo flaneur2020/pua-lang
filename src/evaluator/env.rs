@@ -17,6 +17,10 @@ impl Env {
         }
     }
 
+    pub fn from(store: HashMap<String, Object>) -> Self {
+        Env { store, outer: None }
+    }
+
     pub fn new_with_outer(outer: Rc<RefCell<Env>>) -> Self {
         let store = HashMap::new();
 

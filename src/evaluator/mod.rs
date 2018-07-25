@@ -5,7 +5,6 @@ pub mod builtins;
 use ast::*;
 use evaluator::object::*;
 use evaluator::env::*;
-use evaluator::builtins::new_builtins;
 use std::collections::HashMap;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -13,14 +12,12 @@ use std::rc::Rc;
 #[derive(Debug)]
 pub struct Evaluator {
     env: Rc<RefCell<Env>>,
-    builtins: HashMap<String, Object>,
 }
 
 impl Evaluator {
-    pub fn new() -> Self {
+    pub fn new(env: Rc<RefCell<Env>>) -> Self {
         Evaluator {
-            env: Rc::new(RefCell::new(Env::new())),
-            builtins: new_builtins(),
+            env,
         }
     }
 
@@ -139,12 +136,7 @@ impl Evaluator {
 
         match self.env.borrow_mut().get(name.clone()) {
             Some(value) => value,
-            None => {
-                match self.builtins.get(&name) {
-                    Some(value) => value.clone(),
-                    None => Object::Error(String::from(format!("identifier not found: {}", name)))
-                }
-            },
+            None => Object::Error(String::from(format!("identifier not found: {}", name))),
         }
     }
 
@@ -309,7 +301,7 @@ impl Evaluator {
         let (params, body, env) = match self.eval_expr(*func) {
             Some(Object::Func(params, body, env)) => (params, body, env),
             Some(Object::Builtin(expect_param_num, f)) => {
-                if expect_param_num == args.len() {
+                if expect_param_num < 0 || expect_param_num == args.len() as i32 {
                     return f(args);
                 } else {
                     return Self::error(format!(
@@ -350,9 +342,10 @@ mod tests {
     use lexer::Lexer;
     use parser::Parser;
     use evaluator::*;
+    use evaluator::builtins::new_builtins;
 
     fn eval(input: &str) -> Option<Object> {
-        Evaluator::new().eval(Parser::new(Lexer::new(input)).parse())
+        Evaluator::new(Rc::new(RefCell::new(Env::from(new_builtins())))).eval(Parser::new(Lexer::new(input)).parse())
     }
 
     #[test]
@@ -584,7 +577,7 @@ if (10 > 1) {
                         ),
                     ),
                 ],
-                Rc::new(RefCell::new(Env::new())),
+                Rc::new(RefCell::new(Env::from(new_builtins()))),
             )),
             eval(input),
         );

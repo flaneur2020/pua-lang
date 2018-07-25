@@ -1,7 +1,19 @@
 [package]
-name = "rs-monkey-lang"
+name = "monkey"
 version = "0.1.0"
 authors = ["tsuyoshiwada <wadackel@gmail.com>"]
 
 [dependencies]
-rustyline = "1.0.0"
+rustyline = { version = "1.0.0", optional = true }
+
+[[bin]]
+name = "monkey"
+path = "src/bin/main.rs"
+required-features = ["binaries"]
+
+[[bin]]
+name = "wasm"
+path = "src/wasm/main.rs"
+
+[features]
+binaries = ["rustyline"]

@@ -16,7 +16,7 @@ pub enum Object {
     Array(Vec<Object>),
     Hash(HashMap<Object, Object>),
     Func(Vec<Ident>, BlockStmt, Rc<RefCell<Env>>),
-    Builtin(usize, BuiltinFunc),
+    Builtin(i32, BuiltinFunc),
     Null,
     ReturnValue(Box<Object>),
     Error(String),
