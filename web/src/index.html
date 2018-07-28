@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no,address=no,email=no">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <title>Monkey Programming Language - Playground</title>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div>
+        <ul>
+          <li><button class="button button--primary" id="run"><x-icon icon="play" size="16" color="#fff"></x-icon> RUN</button></li>
+          <li>
+            <div class="select">
+              <select id="snippet">
+                <option value="">SELECT SNIPPET...</option>
+              </select>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <ul>
+          <li><button class="button button--default" id="format"><x-icon icon="sort" size="14" color="#999"></x-icon> FORMAT</button></li>
+          <li><button class="button button--default tooltip-container" id="share"><x-icon icon="share" size="14" color="#999"></x-icon> SHARE<span class="tooltip">Shareable link now in address bar!!</span></button></li>
+          <li><a class="button button--default" href="https://github.com/tsuyoshiwada/rs-monkey-lang"><x-icon icon="doc" size="14" color="#999"></x-icon> DOCUMENT</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <div class="editor">
+      <textarea id="source"></textarea>
+    </div>
+
+    <div class="console">
+      <div class="console__title">
+        <div>
+          <x-icon icon="comment" size="14" color="#999"></x-icon> RESULT
+        </div>
+        <div>
+          <time id="last-updated"></time></div>
+        </div>
+      <div class="console__body" id="output-container">
+        <pre><code id="output"></code></pre>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p class="footer__repo"><a href="https://github.com/tsuyoshiwada/rs-monkey-lang"><x-icon icon="github" size="16" color="#000"></x-icon>tsuyoshiwada/rs-monkey-lang</a> - Monkey Programming Language written in Rust.</p>
+      <p class="footer__copyright">Made with <span>♥</span> <a href="https://github.com/tsuyoshiwada">@tsuyoshiwada</a>.</p>
+    </footer>
+  </main>
+</body>
+</html>

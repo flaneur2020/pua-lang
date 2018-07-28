@@ -1,16 +1,35 @@
-use evaluator::Evaluator;
-use lexer::Lexer;
-use parser::Parser;
+extern crate monkey;
+extern crate rustyline;
+
+use monkey::evaluator::builtins::new_builtins;
+use monkey::evaluator::env::Env;
+use monkey::evaluator::object::Object;
+use monkey::evaluator::Evaluator;
+use monkey::lexer::Lexer;
+use monkey::parser::Parser;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
+use std::cell::RefCell;
+use std::rc::Rc;
 
-pub fn start() {
+fn main() {
     let mut rl = Editor::<()>::new();
-    let mut evaluator = Evaluator::new();
+    let mut env = Env::from(new_builtins());
+
+    env.set(
+        String::from("puts"),
+        &Object::Builtin(-1, |args| {
+            for arg in args {
+                println!("{}", arg);
+            }
+            Object::Null
+        }),
+    );
+
+    let mut evaluator = Evaluator::new(Rc::new(RefCell::new(env)));
 
     println!("Hello! This is the Monkey programming language!");
-    println!("Feel free to type in commands");
-    println!("");
+    println!("Feel free to type in commands\n");
 
     loop {
         match rl.readline(">> ") {

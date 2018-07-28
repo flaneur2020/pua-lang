@@ -1,0 +1,46 @@
+.console {
+  background: #fff;
+}
+
+.console__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+  height: 30px;
+  padding: 0 var(--space-3x);
+  background: #fff;
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+}
+
+.console__title x-icon {
+  margin-right: var(--space-1x);
+}
+
+.console__title time {
+  display: none;
+  color: var(--color-text-light);
+}
+
+.console__body {
+  max-width: 100vw;
+  height: calc(100% - 30px);
+  overflow: auto;
+  letter-spacing: 0.05em;
+}
+
+.console__body pre,
+.console__body code {
+  font-size: inherit;
+  font-family: var(--font-family-code);
+}
+
+.console__body pre {
+  margin: 0;
+  padding: 0 var(--space-3x) var(--space-3x) var(--space-3x);
+}
+
+.console code {
+}

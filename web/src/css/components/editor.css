@@ -1,0 +1,126 @@
+.editor > textarea {
+  display: none;
+}
+
+/* editor styles */
+.CodeMirror {
+  width: 100vw;
+  height: 100%;
+  color: #666;
+  background: var(--color-gray-lighter);
+  font-family: var(--font-family-code);
+  line-height: 1.4;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+.CodeMirror-gutters {
+  border-right: none;
+  background: var(--color-gray-light);
+}
+
+.CodeMirror-linenumber {
+  color: #d3d3d3;
+}
+
+.CodeMirror-focused .CodeMirror-selected {
+  background: #94e8df;
+}
+
+.CodeMirror-selected {
+  background: #d9d9d9;
+}
+
+.CodeMirror-focused .CodeMirror-selected {
+  background: #94e8df;
+}
+
+.CodeMirror-crosshair {
+  cursor: crosshair;
+}
+
+.CodeMirror-line::selection,
+.CodeMirror-line > span::selection,
+.CodeMirror-line > span > span::selection {
+  background: #94e8df;
+}
+
+.CodeMirror-line::-moz-selection,
+.CodeMirror-line > span::-moz-selection,
+.CodeMirror-line > span > span::-moz-selection {
+  background: #94e8df;
+}
+
+/* `monkey` theme */
+.cm-s-monkey .cm-keyword {
+  color: #708;
+}
+
+.cm-s-monkey .cm-atom {
+  color: #219;
+}
+
+.cm-s-monkey .cm-number {
+  color: #164;
+}
+
+.cm-s-monkey .cm-def {
+  color: #00f;
+}
+
+.cm-s-monkey .cm-variable,
+.cm-s-monkey .cm-variable-2 {
+  color: #05a;
+}
+
+.cm-s-monkey .cm-variable-2 {
+  color: #05a;
+}
+
+.cm-s-monkey .cm-variable-3,
+.cm-s-monkey .cm-type {
+  color: #085;
+}
+
+.cm-s-monkey .cm-comment {
+  color: #a50;
+}
+
+.cm-s-monkey .cm-string {
+  color: #a11;
+}
+
+.cm-s-monkey .cm-string-2 {
+  color: #f50;
+}
+
+.cm-s-monkey .cm-meta {
+  color: #555;
+}
+
+.cm-s-monkey .cm-qualifier {
+  color: #555;
+}
+
+.cm-s-monkey .cm-builtin {
+  color: #30a;
+}
+
+.cm-s-monkey .cm-bracket {
+  color: #997;
+}
+
+.cm-s-monkey .cm-tag {
+  color: #170;
+}
+
+.cm-s-monkey .cm-attribute {
+  color: #00c;
+}
+
+.cm-s-monkey .cm-hr {
+  color: #999;
+}
+
+.cm-s-monkey .cm-link {
+  color: #00c;
+}

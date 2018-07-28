@@ -1,0 +1,32 @@
+{
+  "private": true,
+  "scripts": {
+    "start": "webpack-serve --hmr false --reload true",
+    "build": "NODE_ENV=production webpack-cli",
+    "format": "prettier 'src/**/*.+(js|css)' --write",
+    "deploy": "gh-pages -d dist",
+    "predeploy": "yarn build"
+  },
+  "author": "tsuyoshiwada",
+  "license": "MIT",
+  "devDependencies": {
+    "codemirror": "^5.39.2",
+    "copy-webpack-plugin": "^4.5.2",
+    "css-loader": "^1.0.0",
+    "cssnano": "^4.0.3",
+    "gh-pages": "^1.2.0",
+    "html-webpack-plugin": "^3.2.0",
+    "mini-css-extract-plugin": "^0.4.1",
+    "postcss": "^7.0.1",
+    "postcss-import": "^11.1.0",
+    "postcss-loader": "^2.1.6",
+    "prettier": "^1.13.7",
+    "webpack": "^4.16.2",
+    "webpack-cli": "^3.1.0",
+    "webpack-serve": "^2.0.2"
+  },
+  "dependencies": {
+    "escape-html": "^1.0.3",
+    "lz-string": "^1.4.4"
+  }
+}
