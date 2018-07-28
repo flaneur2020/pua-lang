@@ -1,0 +1,29 @@
+.header {
+  display: flex;
+  position: relative;
+  z-index: 100;
+  padding: 0 var(--space-3x);
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+}
+
+.header ul {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.header li {
+  margin: 0 var(--space-1x);
+}
+
+.header li:first-child {
+  margin-left: 0;
+}
+
+.header li:last-child {
+  margin-right: 0;
+}

@@ -1,0 +1,68 @@
+.select {
+  display: block;
+  position: relative;
+}
+
+.select::before {
+  display: block;
+  position: absolute;
+  top: 50%;
+  right: var(--space-5x);
+  margin-top: -6px;
+  padding: 3px;
+  border: solid var(--color-gray-dark);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  content: '';
+  pointer-events: none;
+}
+
+.select::after {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--button-height);
+  background: rgba(0, 0, 0, 0.07);
+  opacity: 0;
+  transition: all 120ms ease-out;
+  transform: scale(0.9);
+  content: '';
+}
+
+.select:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.select select {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: var(--button-height);
+  margin: 0;
+  padding: 0 var(--space-10x) 0 var(--space-5x);
+  border: none;
+  border-radius: var(--button-height);
+  background: transparent;
+  color: #000;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  vertical-align: middle;
+  cursor: pointer;
+  transition-property: background, box-shadow;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.select select:focus {
+  outline: none;
+  box-shadow: var(--color-focus-shadow);
+}

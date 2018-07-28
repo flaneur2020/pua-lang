@@ -1,11 +1,12 @@
 .PHONY: setup
 setup:
-	yarn
 	cargo install wasm-gc
+	(cd web && yarn)
 
 .PHONY: start
 start:
-	yarn start
+	make build_wasm
+	(cd web && yarn start)
 
 .PHONY: test
 test:

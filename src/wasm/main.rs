@@ -34,7 +34,7 @@ pub fn alloc(size: usize) -> *mut c_void {
 }
 
 #[no_mangle]
-pub fn free(ptr: *mut c_void, size: usize) {
+pub fn dealloc(ptr: *mut c_void, size: usize) {
     unsafe {
         let _buf = Vec::from_raw_parts(ptr, 0, size);
     }

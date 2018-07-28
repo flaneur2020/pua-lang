@@ -1,0 +1,7 @@
+.app {
+  display: grid;
+  grid-template-rows: 60px calc(100% - 290px) 194px 36px;
+  width: 100vw;
+  min-height: 500px;
+  height: 100vh;
+}
