@@ -4,6 +4,7 @@ use monkey::evaluator::builtins::new_builtins;
 use monkey::evaluator::env::Env;
 use monkey::evaluator::object::Object;
 use monkey::evaluator::Evaluator;
+use monkey::formatter::Formatter;
 use monkey::lexer::Lexer;
 use monkey::parser::Parser;
 use std::cell::RefCell;
@@ -72,6 +73,17 @@ pub fn eval(input_ptr: *mut c_char) -> *mut c_char {
     let mut evaluator = Evaluator::new(Rc::new(RefCell::new(env)));
     let evaluated = evaluator.eval(program).unwrap_or(Object::Null);
     let output = format!("{}", evaluated);
+
+    CString::new(output).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub fn format(input_ptr: *mut c_char) -> *mut c_char {
+    let input = unsafe { CStr::from_ptr(input_ptr).to_string_lossy().into_owned() };
+
+    // TODO: Error handling
+    let mut formatter = Formatter::new();
+    let output = formatter.format(&input);
 
     CString::new(output).unwrap().into_raw()
 }
