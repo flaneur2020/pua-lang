@@ -93,7 +93,7 @@ pub type BlockStmt = Vec<Stmt>;
 
 pub type Program = BlockStmt;
 
-#[derive(PartialEq, PartialOrd, Debug)]
+#[derive(PartialEq, PartialOrd, Debug, Clone)]
 pub enum Precedence {
     Lowest,
     Equals,      // ==

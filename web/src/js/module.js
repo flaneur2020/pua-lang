@@ -3,6 +3,7 @@ export const Module = {
   _alloc: null,
   _dealloc: null,
   _eval: null,
+  _format: null,
   _textEncoder: new TextEncoder('UTF-8'),
   _textDecoder: new TextDecoder('UTF-8'),
 
@@ -22,6 +23,7 @@ export const Module = {
       Module._alloc = exports.alloc;
       Module._dealloc = exports.dealloc;
       Module._eval = exports.eval;
+      Module._format = exports.format;
     } catch (e) {
       console.error(e);
     }
@@ -62,6 +64,13 @@ export const Module = {
   eval: (str) => {
     const { buf, ptr } = Module.allocStr(str);
     const resultPtr = Module._eval(ptr);
+    Module.dealloc(resultPtr, buf.length);
+    return Module.copyCStr(resultPtr);
+  },
+
+  format: (str) => {
+    const { buf, ptr } = Module.allocStr(str);
+    const resultPtr = Module._format(ptr);
     Module.dealloc(resultPtr, buf.length);
     return Module.copyCStr(resultPtr);
   },
