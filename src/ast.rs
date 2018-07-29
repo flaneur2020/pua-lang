@@ -84,6 +84,7 @@ pub enum Literal {
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Stmt {
+    Blank,
     Let(Ident, Expr),
     Return(Expr),
     Expr(Expr),

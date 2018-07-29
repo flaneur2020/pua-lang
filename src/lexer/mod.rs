@@ -46,7 +46,7 @@ impl<'a> Lexer<'a> {
     fn skip_whitespace(&mut self) {
         loop {
             match self.ch {
-                b' ' | b'\t' | b'\n' | b'\r' => {
+                b' ' | b'\t' => {
                     self.read_char();
                 }
                 _ => {
@@ -113,6 +113,14 @@ impl<'a> Lexer<'a> {
             }
             b'"' => {
                 return self.consume_string();
+            }
+            b'\n' => {
+                if self.nextch_is(b'\n') {
+                    Token::Blank
+                } else {
+                    self.read_char();
+                    return self.next_token();
+                }
             }
             0 => Token::Eof,
             _ => Token::Illegal,
@@ -223,6 +231,7 @@ if (5 < 10) {
 
 [1, 2];
 
+
 {"foo": "bar"};
 "#;
 
@@ -237,6 +246,7 @@ if (5 < 10) {
             Token::Assign,
             Token::Int(10),
             Token::Semicolon,
+            Token::Blank,
             Token::Let,
             Token::Ident(String::from("add")),
             Token::Assign,
@@ -253,6 +263,7 @@ if (5 < 10) {
             Token::Semicolon,
             Token::Rbrace,
             Token::Semicolon,
+            Token::Blank,
             Token::Let,
             Token::Ident(String::from("result")),
             Token::Assign,
@@ -275,6 +286,7 @@ if (5 < 10) {
             Token::GreaterThan,
             Token::Int(5),
             Token::Semicolon,
+            Token::Blank,
             Token::If,
             Token::Lparen,
             Token::Int(5),
@@ -292,6 +304,7 @@ if (5 < 10) {
             Token::Bool(false),
             Token::Semicolon,
             Token::Rbrace,
+            Token::Blank,
             Token::Int(10),
             Token::Equal,
             Token::Int(10),
@@ -312,12 +325,15 @@ if (5 < 10) {
             Token::Semicolon,
             Token::String(String::from("foo bar")),
             Token::Semicolon,
+            Token::Blank,
             Token::Lbracket,
             Token::Int(1),
             Token::Comma,
             Token::Int(2),
             Token::Rbracket,
             Token::Semicolon,
+            Token::Blank,
+            Token::Blank,
             Token::Lbrace,
             Token::String(String::from("foo")),
             Token::Colon,

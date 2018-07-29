@@ -1,12 +1,12 @@
-pub mod object;
-pub mod env;
 pub mod builtins;
+pub mod env;
+pub mod object;
 
 use ast::*;
-use evaluator::object::*;
 use evaluator::env::*;
-use std::collections::HashMap;
+use evaluator::object::*;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 #[derive(Debug)]
@@ -16,9 +16,7 @@ pub struct Evaluator {
 
 impl Evaluator {
     pub fn new(env: Rc<RefCell<Env>>) -> Self {
-        Evaluator {
-            env,
-        }
+        Evaluator { env }
     }
 
     fn is_truthy(obj: Object) -> bool {
@@ -82,7 +80,7 @@ impl Evaluator {
                     self.env.borrow_mut().set(name, &value);
                     Some(value)
                 }
-            },
+            }
             Stmt::Expr(expr) => self.eval_expr(expr),
             Stmt::Return(expr) => {
                 let value = match self.eval_expr(expr) {
@@ -94,7 +92,8 @@ impl Evaluator {
                 } else {
                     Some(Object::ReturnValue(Box::new(value)))
                 }
-            },
+            }
+            _ => None,
         }
     }
 
@@ -115,7 +114,7 @@ impl Evaluator {
                 } else {
                     None
                 }
-            },
+            }
             Expr::Index(left_expr, index_expr) => {
                 let left = self.eval_expr(*left_expr);
                 let index = self.eval_expr(*index_expr);
@@ -124,8 +123,12 @@ impl Evaluator {
                 } else {
                     None
                 }
-            },
-            Expr::If { cond, consequence, alternative } => self.eval_if_expr(*cond, consequence, alternative),
+            }
+            Expr::If {
+                cond,
+                consequence,
+                alternative,
+            } => self.eval_if_expr(*cond, consequence, alternative),
             Expr::Func { params, body } => Some(Object::Func(params, body, Rc::clone(&self.env))),
             Expr::Call { func, args } => Some(self.eval_call_expr(func, args)),
         }
@@ -186,19 +189,15 @@ impl Evaluator {
                 self.eval_array_index_expr(array.clone(), i)
             } else {
                 Self::error(format!("index operator not supported: {}", left))
-            }
-            Object::Hash(ref hash) => {
-                match index {
-                    Object::Int(_) | Object::Bool(_) | Object::String(_) => {
-                        match hash.get(&index) {
-                            Some(o) => o.clone(),
-                            None => Object::Null,
-                        }
-                    },
-                    Object::Error(_) => index,
-                    _ => Self::error(format!("unusable as hash key: {}", index)),
-                }
-            }
+            },
+            Object::Hash(ref hash) => match index {
+                Object::Int(_) | Object::Bool(_) | Object::String(_) => match hash.get(&index) {
+                    Some(o) => o.clone(),
+                    None => Object::Null,
+                },
+                Object::Error(_) => index,
+                _ => Self::error(format!("unusable as hash key: {}", index)),
+            },
             _ => Self::error(format!("uknown operator: {} {}", left, index)),
         }
     }
@@ -234,7 +233,10 @@ impl Evaluator {
     fn eval_infix_string_expr(&mut self, infix: Infix, left: String, right: String) -> Object {
         match infix {
             Infix::Plus => Object::String(format!("{}{}", left, right)),
-            _ => Object::Error(String::from(format!("unknown operator: {} {} {}", left, infix, right))),
+            _ => Object::Error(String::from(format!(
+                "unknown operator: {} {} {}",
+                left, infix, right
+            ))),
         }
     }
 
@@ -253,7 +255,7 @@ impl Evaluator {
             objects
                 .iter()
                 .map(|e| self.eval_expr(e.clone()).unwrap_or(Object::Null))
-                .collect::<Vec<_>>()
+                .collect::<Vec<_>>(),
         )
     }
 
@@ -277,7 +279,12 @@ impl Evaluator {
         Object::Hash(hash)
     }
 
-    fn eval_if_expr(&mut self, cond: Expr, consequence: BlockStmt, alternative: Option<BlockStmt>) -> Option<Object> {
+    fn eval_if_expr(
+        &mut self,
+        cond: Expr,
+        consequence: BlockStmt,
+        alternative: Option<BlockStmt>,
+    ) -> Option<Object> {
         let cond = match self.eval_expr(cond) {
             Some(cond) => cond,
             None => return None,
@@ -316,7 +323,11 @@ impl Evaluator {
         };
 
         if params.len() != args.len() {
-            return Self::error(format!("wrong number of arguments: {} expected but {} given", params.len(), args.len()));
+            return Self::error(format!(
+                "wrong number of arguments: {} expected but {} given",
+                params.len(),
+                args.len()
+            ));
         }
 
         let current_env = Rc::clone(&self.env);
@@ -339,13 +350,14 @@ impl Evaluator {
 
 #[cfg(test)]
 mod tests {
+    use evaluator::builtins::new_builtins;
+    use evaluator::*;
     use lexer::Lexer;
     use parser::Parser;
-    use evaluator::*;
-    use evaluator::builtins::new_builtins;
 
     fn eval(input: &str) -> Option<Object> {
-        Evaluator::new(Rc::new(RefCell::new(Env::from(new_builtins())))).eval(Parser::new(Lexer::new(input)).parse())
+        Evaluator::new(Rc::new(RefCell::new(Env::from(new_builtins()))))
+            .eval(Parser::new(Lexer::new(input)).parse())
     }
 
     #[test]
@@ -377,14 +389,20 @@ mod tests {
     fn test_string_expr() {
         let input = "\"Hello World!\"";
 
-        assert_eq!(Some(Object::String(String::from("Hello World!"))), eval(input));
+        assert_eq!(
+            Some(Object::String(String::from("Hello World!"))),
+            eval(input)
+        );
     }
 
     #[test]
     fn test_string_concatenation() {
         let input = "\"Hello\" + \" \" + \"World!\"";
 
-        assert_eq!(Some(Object::String(String::from("Hello World!"))), eval(input));
+        assert_eq!(
+            Some(Object::String(String::from("Hello World!"))),
+            eval(input)
+        );
     }
 
     #[test]
@@ -418,9 +436,9 @@ mod tests {
 
         assert_eq!(
             Some(Object::Array(vec![
-               Object::Int(1),
-               Object::Int(4),
-               Object::Int(6),
+                Object::Int(1),
+                Object::Int(4),
+                Object::Int(6),
             ])),
             eval(input),
         );
@@ -434,8 +452,14 @@ mod tests {
             ("let i = 0; [1][i]", Some(Object::Int(1))),
             ("[1, 2, 3][1 + 1];", Some(Object::Int(3))),
             ("let myArray = [1, 2, 3]; myArray[2];", Some(Object::Int(3))),
-            ("let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];", Some(Object::Int(6))),
-            ("let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];", Some(Object::Int(2))),
+            (
+                "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+                Some(Object::Int(6)),
+            ),
+            (
+                "let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];",
+                Some(Object::Int(2)),
+            ),
             ("[1, 2, 3][3]", Some(Object::Null)),
             ("[1, 2, 3][-1]", Some(Object::Null)),
         ];
@@ -467,10 +491,7 @@ let two = "two";
         hash.insert(Object::Bool(true), Object::Int(5));
         hash.insert(Object::Bool(false), Object::Int(6));
 
-        assert_eq!(
-            Some(Object::Hash(hash)),
-            eval(input),
-        );
+        assert_eq!(Some(Object::Hash(hash)), eval(input),);
     }
 
     #[test]
@@ -533,13 +554,16 @@ let two = "two";
             ("return 10; 9;", Some(Object::Int(10))),
             ("return 2 * 5; 9;", Some(Object::Int(10))),
             ("9; return 2 * 5; 9;", Some(Object::Int(10))),
-            (r#"
+            (
+                r#"
 if (10 > 1) {
   if (10 > 1) {
     return 10;
   }
   return 1;
-}"#, Some(Object::Int(10))),
+}"#,
+                Some(Object::Int(10)),
+            ),
         ];
 
         for (input, expect) in tests {
@@ -553,7 +577,10 @@ if (10 > 1) {
             ("let a = 5; a;", Some(Object::Int(5))),
             ("let a = 5 * 5; a;", Some(Object::Int(25))),
             ("let a = 5; let b = a; b;", Some(Object::Int(5))),
-            ("let a = 5; let b = a; let c = a + b + 5; c;", Some(Object::Int(15))),
+            (
+                "let a = 5; let b = a; let c = a + b + 5; c;",
+                Some(Object::Int(15)),
+            ),
         ];
 
         for (input, expect) in tests {
@@ -568,15 +595,11 @@ if (10 > 1) {
         assert_eq!(
             Some(Object::Func(
                 vec![Ident(String::from("x"))],
-                vec![
-                    Stmt::Expr(
-                        Expr::Infix(
-                            Infix::Plus,
-                            Box::new(Expr::Ident(Ident(String::from("x")))),
-                            Box::new(Expr::Literal(Literal::Int(2))),
-                        ),
-                    ),
-                ],
+                vec![Stmt::Expr(Expr::Infix(
+                    Infix::Plus,
+                    Box::new(Expr::Ident(Ident(String::from("x")))),
+                    Box::new(Expr::Literal(Literal::Int(2))),
+                ))],
                 Rc::new(RefCell::new(Env::from(new_builtins()))),
             )),
             eval(input),
@@ -586,13 +609,31 @@ if (10 > 1) {
     #[test]
     fn test_fn_application() {
         let tests = vec![
-            ("let identity = fn(x) { x; }; identity(5);", Some(Object::Int(5))),
-            ("let identity = fn(x) { return x; }; identity(5);", Some(Object::Int(5))),
-            ("let double = fn(x) { x * 2; }; double(5);", Some(Object::Int(10))),
-            ("let add = fn(x, y) { x + y; }; add(5, 5);", Some(Object::Int(10))),
-            ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", Some(Object::Int(20))),
+            (
+                "let identity = fn(x) { x; }; identity(5);",
+                Some(Object::Int(5)),
+            ),
+            (
+                "let identity = fn(x) { return x; }; identity(5);",
+                Some(Object::Int(5)),
+            ),
+            (
+                "let double = fn(x) { x * 2; }; double(5);",
+                Some(Object::Int(10)),
+            ),
+            (
+                "let add = fn(x, y) { x + y; }; add(5, 5);",
+                Some(Object::Int(10)),
+            ),
+            (
+                "let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));",
+                Some(Object::Int(20)),
+            ),
             ("fn(x) { x; }(5)", Some(Object::Int(5))),
-            ("fn(a) { let f = fn(b) { a + b }; f(a); }(5);", Some(Object::Int(10))),
+            (
+                "fn(a) { let f = fn(b) { a + b }; f(a); }(5);",
+                Some(Object::Int(10)),
+            ),
         ];
 
         for (input, expect) in tests {
@@ -622,39 +663,126 @@ addTwo(2);
             ("len(\"four\")", Some(Object::Int(4))),
             ("len(\"hello world\")", Some(Object::Int(11))),
             ("len([1, 2, 3])", Some(Object::Int(3))),
-            ("len(1)", Some(Object::Error(String::from("argument to `len` not supported, got 1")))),
-            ("len(\"one\", \"two\")", Some(Object::Error(String::from("wrong number of arguments. got=2, want=1")))),
-
+            (
+                "len(1)",
+                Some(Object::Error(String::from(
+                    "argument to `len` not supported, got 1",
+                ))),
+            ),
+            (
+                "len(\"one\", \"two\")",
+                Some(Object::Error(String::from(
+                    "wrong number of arguments. got=2, want=1",
+                ))),
+            ),
             // first
             ("first([1, 2, 3])", Some(Object::Int(1))),
             ("first([])", Some(Object::Null)),
-            ("first([], [])", Some(Object::Error(String::from("wrong number of arguments. got=2, want=1")))),
-            ("first(\"string\")", Some(Object::Error(String::from("argument to `first` must be array. got string")))),
-            ("first(1)", Some(Object::Error(String::from("argument to `first` must be array. got 1")))),
-
+            (
+                "first([], [])",
+                Some(Object::Error(String::from(
+                    "wrong number of arguments. got=2, want=1",
+                ))),
+            ),
+            (
+                "first(\"string\")",
+                Some(Object::Error(String::from(
+                    "argument to `first` must be array. got string",
+                ))),
+            ),
+            (
+                "first(1)",
+                Some(Object::Error(String::from(
+                    "argument to `first` must be array. got 1",
+                ))),
+            ),
             // last
             ("last([1, 2, 3])", Some(Object::Int(3))),
             ("last([])", Some(Object::Null)),
-            ("last([], [])", Some(Object::Error(String::from("wrong number of arguments. got=2, want=1")))),
-            ("last(\"string\")", Some(Object::Error(String::from("argument to `last` must be array. got string")))),
-            ("last(1)", Some(Object::Error(String::from("argument to `last` must be array. got 1")))),
-
+            (
+                "last([], [])",
+                Some(Object::Error(String::from(
+                    "wrong number of arguments. got=2, want=1",
+                ))),
+            ),
+            (
+                "last(\"string\")",
+                Some(Object::Error(String::from(
+                    "argument to `last` must be array. got string",
+                ))),
+            ),
+            (
+                "last(1)",
+                Some(Object::Error(String::from(
+                    "argument to `last` must be array. got 1",
+                ))),
+            ),
             // rest
-            ("rest([1, 2, 3, 4])", Some(Object::Array(vec![Object::Int(2), Object::Int(3), Object::Int(4)]))),
-            ("rest([2, 3, 4])", Some(Object::Array(vec![Object::Int(3), Object::Int(4)]))),
+            (
+                "rest([1, 2, 3, 4])",
+                Some(Object::Array(vec![
+                    Object::Int(2),
+                    Object::Int(3),
+                    Object::Int(4),
+                ])),
+            ),
+            (
+                "rest([2, 3, 4])",
+                Some(Object::Array(vec![Object::Int(3), Object::Int(4)])),
+            ),
             ("rest([4])", Some(Object::Array(vec![]))),
             ("rest([])", Some(Object::Null)),
-            ("rest([], [])", Some(Object::Error(String::from("wrong number of arguments. got=2, want=1")))),
-            ("rest(\"string\")", Some(Object::Error(String::from("argument to `rest` must be array. got string")))),
-            ("rest(1)", Some(Object::Error(String::from("argument to `rest` must be array. got 1")))),
-
+            (
+                "rest([], [])",
+                Some(Object::Error(String::from(
+                    "wrong number of arguments. got=2, want=1",
+                ))),
+            ),
+            (
+                "rest(\"string\")",
+                Some(Object::Error(String::from(
+                    "argument to `rest` must be array. got string",
+                ))),
+            ),
+            (
+                "rest(1)",
+                Some(Object::Error(String::from(
+                    "argument to `rest` must be array. got 1",
+                ))),
+            ),
             // push
-            ("push([1, 2, 3], 4)", Some(Object::Array(vec![Object::Int(1), Object::Int(2), Object::Int(3), Object::Int(4)]))),
+            (
+                "push([1, 2, 3], 4)",
+                Some(Object::Array(vec![
+                    Object::Int(1),
+                    Object::Int(2),
+                    Object::Int(3),
+                    Object::Int(4),
+                ])),
+            ),
             ("push([], 1)", Some(Object::Array(vec![Object::Int(1)]))),
-            ("let a = [1]; push(a, 2); a", Some(Object::Array(vec![Object::Int(1)]))),
-            ("push([], [], [])", Some(Object::Error(String::from("wrong number of arguments. got=3, want=2")))),
-            ("push(\"string\", 1)", Some(Object::Error(String::from("argument to `push` must be array. got string")))),
-            ("push(1, 1)", Some(Object::Error(String::from("argument to `push` must be array. got 1")))),
+            (
+                "let a = [1]; push(a, 2); a",
+                Some(Object::Array(vec![Object::Int(1)])),
+            ),
+            (
+                "push([], [], [])",
+                Some(Object::Error(String::from(
+                    "wrong number of arguments. got=3, want=2",
+                ))),
+            ),
+            (
+                "push(\"string\", 1)",
+                Some(Object::Error(String::from(
+                    "argument to `push` must be array. got string",
+                ))),
+            ),
+            (
+                "push(1, 1)",
+                Some(Object::Error(String::from(
+                    "argument to `push` must be array. got 1",
+                ))),
+            ),
         ];
 
         for (input, expect) in tests {
@@ -665,21 +793,58 @@ addTwo(2);
     #[test]
     fn test_error_handling() {
         let tests = vec![
-            ("5 + true", Some(Object::Error(String::from("type mismatch: 5 + true")))),
-            ("5 + true; 5;", Some(Object::Error(String::from("type mismatch: 5 + true")))),
-            ("-true", Some(Object::Error(String::from("unknown operator: -true")))),
-            ("5; true + false; 5;", Some(Object::Error(String::from("unknown operator: true + false")))),
-            ("if (10 > 1) { true + false; }", Some(Object::Error(String::from("unknown operator: true + false")))),
-            ("\"Hello\" - \"World\"", Some(Object::Error(String::from("unknown operator: Hello - World")))),
-            (r#"
+            (
+                "5 + true",
+                Some(Object::Error(String::from("type mismatch: 5 + true"))),
+            ),
+            (
+                "5 + true; 5;",
+                Some(Object::Error(String::from("type mismatch: 5 + true"))),
+            ),
+            (
+                "-true",
+                Some(Object::Error(String::from("unknown operator: -true"))),
+            ),
+            (
+                "5; true + false; 5;",
+                Some(Object::Error(String::from(
+                    "unknown operator: true + false",
+                ))),
+            ),
+            (
+                "if (10 > 1) { true + false; }",
+                Some(Object::Error(String::from(
+                    "unknown operator: true + false",
+                ))),
+            ),
+            (
+                "\"Hello\" - \"World\"",
+                Some(Object::Error(String::from(
+                    "unknown operator: Hello - World",
+                ))),
+            ),
+            (
+                r#"
 if (10 > 1) {
   if (10 > 1) {
     return true + false;
   }
   return 1;
-}"#, Some(Object::Error(String::from("unknown operator: true + false")))),
-            ("foobar", Some(Object::Error(String::from("identifier not found: foobar")))),
-            ("{\"name\": \"Monkey\"}[fn(x) { x }]", Some(Object::Error(String::from("unusable as hash key: fn(x) { ... }")))),
+}"#,
+                Some(Object::Error(String::from(
+                    "unknown operator: true + false",
+                ))),
+            ),
+            (
+                "foobar",
+                Some(Object::Error(String::from("identifier not found: foobar"))),
+            ),
+            (
+                "{\"name\": \"Monkey\"}[fn(x) { x }]",
+                Some(Object::Error(String::from(
+                    "unusable as hash key: fn(x) { ... }",
+                ))),
+            ),
         ];
 
         for (input, expect) in tests {
@@ -687,33 +852,33 @@ if (10 > 1) {
         }
     }
 
-// FIXME Someday, I want to run Z Combinator...
-//     #[test]
-//     fn test_z_combinator() {
-//         let input = r#"
-// let z = fn(f) {
-//   return fn(x) {
-//     return f(fn(y) {
-//       return x(x)(y);
-//     });
-//   }(fn(x) {
-//     return f(fn(y) {
-//       return x(x)(y);
-//     });
-//   });
-// };
-//
-// return z(fn(f) {
-//   return fn(n) {
-//     if (n == 0) {
-//       1
-//     } else {
-//       n * f(n - 1)
-//     }
-//   };
-// })(5);
-//         "#;
-//
-//         assert_eq!(Some(Object::Int(120)), eval(input));
-//     }
+    // FIXME Someday, I want to run Z Combinator...
+    //     #[test]
+    //     fn test_z_combinator() {
+    //         let input = r#"
+    // let z = fn(f) {
+    //   return fn(x) {
+    //     return f(fn(y) {
+    //       return x(x)(y);
+    //     });
+    //   }(fn(x) {
+    //     return f(fn(y) {
+    //       return x(x)(y);
+    //     });
+    //   });
+    // };
+    //
+    // return z(fn(f) {
+    //   return fn(n) {
+    //     if (n == 0) {
+    //       1
+    //     } else {
+    //       n * f(n - 1)
+    //     }
+    //   };
+    // })(5);
+    //         "#;
+    //
+    //         assert_eq!(Some(Object::Int(120)), eval(input));
+    //     }
 }
