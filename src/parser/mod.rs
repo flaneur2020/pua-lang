@@ -160,6 +160,7 @@ impl<'a> Parser<'a> {
         match self.current_token {
             Token::Let => self.parse_let_stmt(),
             Token::Return => self.parse_return_stmt(),
+            Token::Blank => Some(Stmt::Blank),
             _ => self.parse_expr_stmt(),
         }
     }
@@ -572,6 +573,50 @@ mod tests {
         println!("\n");
 
         panic!("failed");
+    }
+
+    #[test]
+    fn test_blank() {
+        let input = r#"
+1000;
+
+1000;
+
+
+1000;
+
+if (x) {
+
+    x;
+
+}
+        "#;
+
+        let mut parser = Parser::new(Lexer::new(input));
+        let program = parser.parse();
+
+        check_parse_errors(&mut parser);
+        assert_eq!(
+            vec![
+                Stmt::Expr(Expr::Literal(Literal::Int(1000))),
+                Stmt::Blank,
+                Stmt::Expr(Expr::Literal(Literal::Int(1000))),
+                Stmt::Blank,
+                Stmt::Blank,
+                Stmt::Expr(Expr::Literal(Literal::Int(1000))),
+                Stmt::Blank,
+                Stmt::Expr(Expr::If {
+                    cond: Box::new(Expr::Ident(Ident(String::from("x")))),
+                    consequence: vec![
+                        Stmt::Blank,
+                        Stmt::Expr(Expr::Ident(Ident(String::from("x")))),
+                        Stmt::Blank,
+                    ],
+                    alternative: None,
+                }),
+            ],
+            program,
+        );
     }
 
     #[test]

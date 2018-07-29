@@ -58,17 +58,42 @@ impl Formatter {
         "  ".repeat(size as usize)
     }
 
+    fn normalize_block_stmt(stmts: BlockStmt) -> BlockStmt {
+        stmts
+            .iter()
+            .enumerate()
+            .filter_map(|(i, x)| {
+                if i == 0 && *x == Stmt::Blank {
+                    None
+                } else if i + 1 == stmts.len() && *x == Stmt::Blank {
+                    None
+                } else if i > 0 && *x == Stmt::Blank && stmts.get(i - 1) == Some(&Stmt::Blank) {
+                    None
+                } else {
+                    Some(x.clone())
+                }
+            })
+            .collect::<Vec<_>>()
+    }
+
     fn format_block_stmt(&mut self, stmts: BlockStmt) -> String {
         let mut result = String::new();
+        let list = Self::normalize_block_stmt(stmts);
 
-        for (i, stmt) in stmts.into_iter().enumerate() {
+        for (i, stmt) in list.into_iter().enumerate() {
             self.column = self.indent * 2 + 1;
 
             if i > 0 {
                 result.push_str("\n");
             }
 
-            result.push_str(&format!("{}{}", self.indent_str(0), self.format_stmt(stmt)));
+            let indent_str = if stmt == Stmt::Blank {
+                String::new()
+            } else {
+                self.indent_str(0)
+            };
+
+            result.push_str(&format!("{}{}", indent_str, self.format_stmt(stmt)));
         }
 
         result
@@ -85,6 +110,7 @@ impl Formatter {
                     format!("{};", self.format_expr(expr, Precedence::Lowest))
                 }
             }
+            Stmt::Blank => String::new(),
         }
     }
 
@@ -369,6 +395,50 @@ mod tests {
 
     fn format(input: &str) -> String {
         Formatter::new().format(input)
+    }
+
+    #[test]
+    fn test_blank() {
+        let tests = vec![
+            (
+                r#"1000;
+
+1000;
+
+
+1000;
+
+
+
+1000;"#,
+                r#"1000;
+
+1000;
+
+1000;
+
+1000;"#,
+            ),
+            (
+                r#"if (x) {
+
+  1000;
+
+
+  1000;
+
+}"#,
+                r#"if (x) {
+  1000;
+
+  1000;
+}"#,
+            ),
+        ];
+
+        for (input, expect) in tests {
+            assert_eq!(String::from(expect), format(input));
+        }
     }
 
     #[test]

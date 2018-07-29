@@ -23,6 +23,7 @@ build_wasm:
 
 .PHONY: web_deploy
 web_deploy:
+	make build_wasm
 	(cd web && yarn --pure-lockfile && yarn deploy)
 
 .PHONY: repl
