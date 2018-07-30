@@ -7,7 +7,12 @@ format.addEventListener(
   'click',
   (e) => {
     e.preventDefault();
-    Command.setValue(Module.format(Command.getValue()));
+
+    const result = Module.format(Command.getValue());
+
+    if (result !== '') {
+      Command.setValue(result);
+    }
   },
   false,
 );

@@ -1,5 +1,6 @@
 extern crate monkey;
 
+use monkey::ast::Program;
 use monkey::evaluator::builtins::new_builtins;
 use monkey::evaluator::env::Env;
 use monkey::evaluator::object::Object;
@@ -21,9 +22,29 @@ extern "C" {
 
 fn internal_print(msg: &str) {
     unsafe {
-        let c_str = CString::new(msg).unwrap();
-        print(c_str.into_raw());
+        print(string_to_ptr(msg.to_string()));
     }
+}
+
+fn string_to_ptr(s: String) -> *mut c_char {
+    CString::new(s).unwrap().into_raw()
+}
+
+fn parse(input: &str) -> Result<Program, String> {
+    let mut parser = Parser::new(Lexer::new(input));
+    let program = parser.parse();
+    let errors = parser.get_errors();
+
+    if errors.len() > 0 {
+        let msg = errors
+            .into_iter()
+            .map(|e| format!("{}\n", e))
+            .collect::<String>();
+
+        return Err(msg);
+    }
+
+    Ok(program)
 }
 
 #[no_mangle]
@@ -44,19 +65,10 @@ pub fn dealloc(ptr: *mut c_void, size: usize) {
 #[no_mangle]
 pub fn eval(input_ptr: *mut c_char) -> *mut c_char {
     let input = unsafe { CStr::from_ptr(input_ptr).to_string_lossy().into_owned() };
-
-    let mut parser = Parser::new(Lexer::new(&input));
-    let program = parser.parse();
-    let errors = parser.get_errors();
-
-    if errors.len() > 0 {
-        let msg = errors
-            .into_iter()
-            .map(|e| format!("{}\n", e))
-            .collect::<String>();
-
-        return CString::new(msg).unwrap().into_raw();
-    }
+    let program = match parse(&input) {
+        Ok(program) => program,
+        Err(msg) => return string_to_ptr(msg),
+    };
 
     let mut env = Env::from(new_builtins());
 
@@ -74,16 +86,22 @@ pub fn eval(input_ptr: *mut c_char) -> *mut c_char {
     let evaluated = evaluator.eval(program).unwrap_or(Object::Null);
     let output = format!("{}", evaluated);
 
-    CString::new(output).unwrap().into_raw()
+    string_to_ptr(output)
 }
 
 #[no_mangle]
 pub fn format(input_ptr: *mut c_char) -> *mut c_char {
     let input = unsafe { CStr::from_ptr(input_ptr).to_string_lossy().into_owned() };
+    let program = match parse(&input) {
+        Ok(program) => program,
+        Err(msg) => {
+            internal_print(&msg);
+            return string_to_ptr(String::new());
+        }
+    };
 
-    // TODO: Error handling
     let mut formatter = Formatter::new();
-    let output = formatter.format(&input);
+    let output = formatter.format(program);
 
-    CString::new(output).unwrap().into_raw()
+    string_to_ptr(output)
 }
