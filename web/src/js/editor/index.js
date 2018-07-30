@@ -15,6 +15,8 @@ const outputContainer = document.getElementById('output-container');
 const output = document.getElementById('output');
 const lastUpdated = document.getElementById('last-updated');
 
+const noop = () => {};
+
 const editor = CodeMirror.fromTextArea(source, {
   mode: 'monkey',
   theme: 'monkey',
@@ -60,6 +62,14 @@ export const Command = {
     output.innerHTML = '';
     outputContainer.scrollTop = 0;
   },
+
+  format: () => {
+    const result = Module.format(Command.getValue());
+
+    if (result !== '') {
+      Command.setValue(result);
+    }
+  },
 };
 
 const query = new window.URLSearchParams(window.location.search);
@@ -72,28 +82,40 @@ if (query.has(SHARE_QUERY_KEY)) {
 }
 
 editor.addKeyMap({
-  'Cmd-Enter': Command.run,
-  'Ctrl-Enter': Command.run,
-  'Ctrl-L': Command.clear,
+  'Ctrl-Enter': noop,
+  'Shift-Enter': noop,
+  'Ctrl-L': noop,
 });
+
+document.addEventListener(
+  'keydown',
+  (e) => {
+    const { ctrlKey, metaKey, shiftKey, key: raw } = e;
+    const key = raw.toLowerCase();
+
+    // Ctrl + Enter
+    if (ctrlKey && key === 'enter') {
+      Command.run();
+    }
+
+    // Shift + Enter
+    if (shiftKey && key === 'enter') {
+      Command.format();
+    }
+
+    // Ctrl + L
+    if (ctrlKey && key === 'l') {
+      Command.clear();
+    }
+  },
+  false,
+);
 
 run.addEventListener(
   'click',
   (e) => {
     e.preventDefault();
     Command.run();
-  },
-  false,
-);
-
-document.addEventListener(
-  'keydown',
-  (e) => {
-    const { ctrlKey, key } = e;
-
-    if (ctrlKey && key === 'l') {
-      Command.clear();
-    }
   },
   false,
 );
