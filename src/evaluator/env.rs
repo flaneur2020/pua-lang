@@ -22,10 +22,8 @@ impl Env {
     }
 
     pub fn new_with_outer(outer: Rc<RefCell<Env>>) -> Self {
-        let store = HashMap::new();
-
         Env {
-            store,
+            store: HashMap::new(),
             outer: Some(outer),
         }
     }
