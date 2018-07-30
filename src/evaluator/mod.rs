@@ -41,6 +41,10 @@ impl Evaluator {
         let mut result = None;
 
         for stmt in program {
+            if stmt == Stmt::Blank {
+                continue;
+            }
+
             match self.eval_stmt(stmt) {
                 Some(Object::ReturnValue(value)) => return Some(*value),
                 Some(Object::Error(msg)) => return Some(Object::Error(msg)),
@@ -55,6 +59,10 @@ impl Evaluator {
         let mut result = Object::Null;
 
         for stmt in stmts {
+            if stmt == Stmt::Blank {
+                continue;
+            }
+
             match self.eval_stmt(stmt) {
                 Some(Object::ReturnValue(value)) => return Object::ReturnValue(value),
                 Some(Object::Error(msg)) => return Object::Error(msg),
@@ -580,6 +588,34 @@ if (10 > 1) {
             (
                 "let a = 5; let b = a; let c = a + b + 5; c;",
                 Some(Object::Int(15)),
+            ),
+        ];
+
+        for (input, expect) in tests {
+            assert_eq!(expect, eval(input));
+        }
+    }
+
+    #[test]
+    fn test_blank_stmt() {
+        let tests = vec![
+            (
+                r#"5;
+
+
+"#,
+                Some(Object::Int(5)),
+            ),
+            (
+                r#"let identity = fn (x) {
+  x;
+
+}
+
+identity(100);
+
+"#,
+                Some(Object::Int(100)),
             ),
         ];
 
