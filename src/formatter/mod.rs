@@ -1,6 +1,4 @@
 use ast::*;
-use lexer::*;
-use parser::*;
 
 struct FormatConfig {
     max_line_length: usize,
@@ -47,8 +45,8 @@ impl Formatter {
         }
     }
 
-    pub fn format(&mut self, input: &str) -> String {
-        self.format_block_stmt(Parser::new(Lexer::new(input)).parse())
+    pub fn format(&mut self, program: Program) -> String {
+        self.format_block_stmt(program)
     }
 
     fn indent_str(&self, offset: i32) -> String {
@@ -392,9 +390,11 @@ impl Formatter {
 #[cfg(test)]
 mod tests {
     use formatter::*;
+    use lexer::*;
+    use parser::*;
 
     fn format(input: &str) -> String {
-        Formatter::new().format(input)
+        Formatter::new().format(Parser::new(Lexer::new(input)).parse())
     }
 
     #[test]
