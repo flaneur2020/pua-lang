@@ -41,6 +41,10 @@ impl Evaluator {
         let mut result = None;
 
         for stmt in program {
+            if stmt == Stmt::Blank {
+                continue;
+            }
+
             match self.eval_stmt(stmt) {
                 Some(Object::ReturnValue(value)) => return Some(*value),
                 Some(Object::Error(msg)) => return Some(Object::Error(msg)),
@@ -51,15 +55,18 @@ impl Evaluator {
         result
     }
 
-    fn eval_block_stmt(&mut self, stmts: BlockStmt) -> Object {
-        let mut result = Object::Null;
+    fn eval_block_stmt(&mut self, stmts: BlockStmt) -> Option<Object> {
+        let mut result = None;
 
         for stmt in stmts {
+            if stmt == Stmt::Blank {
+                continue;
+            }
+
             match self.eval_stmt(stmt) {
-                Some(Object::ReturnValue(value)) => return Object::ReturnValue(value),
-                Some(Object::Error(msg)) => return Object::Error(msg),
-                Some(obj) => result = obj,
-                None => return Object::Null,
+                Some(Object::ReturnValue(value)) => return Some(Object::ReturnValue(value)),
+                Some(Object::Error(msg)) => return Some(Object::Error(msg)),
+                obj => result = obj,
             }
         }
 
@@ -78,7 +85,7 @@ impl Evaluator {
                 } else {
                     let Ident(name) = ident;
                     self.env.borrow_mut().set(name, &value);
-                    Some(value)
+                    None
                 }
             }
             Stmt::Expr(expr) => self.eval_expr(expr),
@@ -291,9 +298,9 @@ impl Evaluator {
         };
 
         if Self::is_truthy(cond) {
-            Some(self.eval_block_stmt(consequence))
+            self.eval_block_stmt(consequence)
         } else if let Some(alt) = alternative {
-            Some(self.eval_block_stmt(alt))
+            self.eval_block_stmt(alt)
         } else {
             None
         }
@@ -344,7 +351,10 @@ impl Evaluator {
 
         self.env = current_env;
 
-        object
+        match object {
+            Some(o) => o,
+            None => Object::Null,
+        }
     }
 }
 
@@ -580,6 +590,34 @@ if (10 > 1) {
             (
                 "let a = 5; let b = a; let c = a + b + 5; c;",
                 Some(Object::Int(15)),
+            ),
+        ];
+
+        for (input, expect) in tests {
+            assert_eq!(expect, eval(input));
+        }
+    }
+
+    #[test]
+    fn test_blank_stmt() {
+        let tests = vec![
+            (
+                r#"5;
+
+
+"#,
+                Some(Object::Int(5)),
+            ),
+            (
+                r#"let identity = fn (x) {
+  x;
+
+}
+
+identity(100);
+
+"#,
+                Some(Object::Int(100)),
             ),
         ];
 
