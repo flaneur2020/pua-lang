@@ -62,6 +62,7 @@ export const Module = {
   },
 
   eval: (str) => {
+    if (!Module.isReady()) return;
     const { buf, ptr } = Module.allocStr(str);
     const resultPtr = Module._eval(ptr);
     Module.dealloc(resultPtr, buf.length);
@@ -69,6 +70,7 @@ export const Module = {
   },
 
   format: (str) => {
+    if (!Module.isReady()) return;
     const { buf, ptr } = Module.allocStr(str);
     const resultPtr = Module._format(ptr);
     Module.dealloc(resultPtr, buf.length);
