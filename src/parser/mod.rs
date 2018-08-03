@@ -230,7 +230,7 @@ impl<'a> Parser<'a> {
             Token::Bool(_) => self.parse_bool_expr(),
             Token::Lbracket => self.parse_array_expr(),
             Token::Lbrace => self.parse_hash_expr(),
-            Token::Bang | Token::Minus => self.parse_prefix_expr(),
+            Token::Bang | Token::Minus | Token::Plus => self.parse_prefix_expr(),
             Token::Lparen => self.parse_grouped_expr(),
             Token::If => self.parse_if_expr(),
             Token::Func => self.parse_func_expr(),
@@ -385,6 +385,7 @@ impl<'a> Parser<'a> {
         let prefix = match self.current_token {
             Token::Bang => Prefix::Not,
             Token::Minus => Prefix::Minus,
+            Token::Plus => Prefix::Plus,
             _ => return None,
         };
 
@@ -852,6 +853,13 @@ return 993322;
                 "-15;",
                 Stmt::Expr(Expr::Prefix(
                     Prefix::Minus,
+                    Box::new(Expr::Literal(Literal::Int(15))),
+                )),
+            ),
+            (
+                "+15;",
+                Stmt::Expr(Expr::Prefix(
+                    Prefix::Plus,
                     Box::new(Expr::Literal(Literal::Int(15))),
                 )),
             ),
