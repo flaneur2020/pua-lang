@@ -154,7 +154,7 @@ impl Evaluator {
         match prefix {
             Prefix::Not => self.eval_not_op_expr(right),
             Prefix::Minus => self.eval_minus_prefix_op_expr(right),
-            _ => Self::error(format!("unknown operator: {} {}", prefix, right)),
+            Prefix::Plus => self.eval_plus_prefix_op_expr(right),
         }
     }
 
@@ -171,6 +171,13 @@ impl Evaluator {
         match right {
             Object::Int(value) => Object::Int(-value),
             _ => Self::error(format!("unknown operator: -{}", right)),
+        }
+    }
+
+    fn eval_plus_prefix_op_expr(&mut self, right: Object) -> Object {
+        match right {
+            Object::Int(value) => Object::Int(value),
+            _ => Self::error(format!("unknown operator: {}", right)),
         }
     }
 
@@ -377,6 +384,10 @@ mod tests {
             ("10", Some(Object::Int(10))),
             ("-5", Some(Object::Int(-5))),
             ("-10", Some(Object::Int(-10))),
+            ("+5", Some(Object::Int(5))),
+            ("+10", Some(Object::Int(10))),
+            ("+(-5)", Some(Object::Int(-5))),
+            ("+(-10)", Some(Object::Int(-10))),
             ("5 + 5 + 5 + 5 - 10", Some(Object::Int(10))),
             ("2 * 2 * 2 * 2 * 2", Some(Object::Int(32))),
             ("-50 + 100 + -50", Some(Object::Int(0))),
