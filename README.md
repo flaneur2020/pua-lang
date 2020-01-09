@@ -1,6 +1,6 @@
 # rs-monkey-lang
 
-[![CircleCI](https://circleci.com/gh/tsuyoshiwada/rs-monkey-lang.svg?style=svg)](https://circleci.com/gh/tsuyoshiwada/rs-monkey-lang)
+[![CircleCI](https://circleci.com/gh/wadackel/rs-monkey-lang.svg?style=svg)](https://circleci.com/gh/wadackel/rs-monkey-lang)
 
 > Monkey Programming Language written in Rust.
 
@@ -22,7 +22,7 @@ It's came from [Writing An Interpreter In Go][writing-an-interpreter-in-go].
 ![REPL Screenshot](./docs/assets/repl.png)
 
 ```bash
-$ git clone https://github.com/tsuyoshiwada/rs-monkey-lang.git
+$ git clone https://github.com/wadackel/rs-monkey-lang.git
 $ make repl
 ```
 
@@ -31,7 +31,7 @@ $ make repl
 ![Playground Screenshot](./docs/assets/playground.png)
 
 Working with Wasm!! Awesome :dog:  
-https://tsuyoshiwada.github.io/rs-monkey-lang/
+https://wadackel.github.io/rs-monkey-lang/
 
 
 ## Documentation
@@ -371,7 +371,7 @@ Enjoy Monkey :monkey_face: !
 
 ## License
 
-[MIT © tsuyoshiwada](./LICENSE)
+[MIT © wadackel](./LICENSE)
 
 
 [writing-an-interpreter-in-go]: https://interpreterbook.com/#the-monkey-programming-language
