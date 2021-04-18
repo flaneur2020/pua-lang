@@ -36,15 +36,15 @@ impl fmt::Display for ParseError {
 
 pub type ParseErrors = Vec<ParseError>;
 
-pub struct Parser<'a> {
-    lexer: Lexer<'a>,
+pub struct Parser {
+    lexer: Lexer,
     current_token: Token,
     next_token: Token,
     errors: ParseErrors,
 }
 
-impl<'a> Parser<'a> {
-    pub fn new(lexer: Lexer<'a>) -> Self {
+impl Parser {
+    pub fn new(lexer: Lexer) -> Self {
         let mut parser = Parser {
             lexer,
             current_token: Token::Eof,

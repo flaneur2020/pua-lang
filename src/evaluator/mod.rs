@@ -359,6 +359,7 @@ impl Evaluator {
         self.env = current_env;
 
         match object {
+            Some(Object::ReturnValue(o)) => *o,
             Some(o) => o,
             None => Object::Null,
         }
@@ -573,7 +574,7 @@ let two = "two";
         let tests = vec![
             ("return 10;", Some(Object::Int(10))),
             ("return 10; 9;", Some(Object::Int(10))),
-            ("return 2 * 5; 9;", Some(Object::Int(10))),
+            ("return 2 * 5; 8;", Some(Object::Int(10))),
             ("9; return 2 * 5; 9;", Some(Object::Int(10))),
             (
                 r#"
@@ -665,6 +666,18 @@ identity(100);
             (
                 "let identity = fn(x) { return x; }; identity(5);",
                 Some(Object::Int(5)),
+            ),
+            (
+                "let hello = fn() { return \"hello\"; }; hello();",
+                Some(Object::String("hello".to_string())),
+            ),
+            (
+                "赋能 hello = fn() { return \"hello\"; }; hello();",
+                Some(Object::String("hello".to_string())),
+            ),
+            (
+                "赋能 fib = 抓手(n) { 细分 (n 对齐 0) { 反哺 0; }; 细分 (n 对齐 1) { 反哺 1; }; 反哺 fib(n-1) + fib(n-2); }; fib(2);",
+                Some(Object::Int(1)),
             ),
             (
                 "let double = fn(x) { x * 2; }; double(5);",

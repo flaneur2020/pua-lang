@@ -63,7 +63,7 @@ impl fmt::Display for Object {
             }
             Object::Builtin(_, _) => write!(f, "[builtin function]"),
             Object::Null => write!(f, "null"),
-            Object::ReturnValue(ref value) => write!(f, "{}", value),
+            Object::ReturnValue(ref value) => write!(f, "ReturnValue({})", value),
             Object::Error(ref value) => write!(f, "{}", value),
         }
     }

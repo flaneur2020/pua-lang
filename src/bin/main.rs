@@ -1,5 +1,6 @@
 extern crate monkey;
 extern crate rustyline;
+extern crate cjk;
 
 use monkey::evaluator::builtins::new_builtins;
 use monkey::evaluator::env::Env;
@@ -17,7 +18,7 @@ fn main() {
     let mut env = Env::from(new_builtins());
 
     env.set(
-        String::from("puts"),
+        String::from("输出"),
         &Object::Builtin(-1, |args| {
             for arg in args {
                 println!("{}", arg);

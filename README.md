@@ -1,67 +1,26 @@
-# rs-monkey-lang
+# pua-lang
 
-[![CircleCI](https://circleci.com/gh/wadackel/rs-monkey-lang.svg?style=svg)](https://circleci.com/gh/wadackel/rs-monkey-lang)
+> PUA Programming Language written in Rust.
 
-> Monkey Programming Language written in Rust.
+## What's pua-lang?
 
+pua-lang is a dialect of The Monkey Programming Language. The implementation is a fork of [rs-monkey-lang](https://github.com/wadackel/rs-monkey-lang).
 
-## What's Monkey?
+`Monkey` is a programming language designed to learn interpreters.
+It's came from [Writing An Interpreter In Go][https://compilerbook.com/].
 
-![The Monkey Programming Language](https://cloud.githubusercontent.com/assets/1013641/22617482/9c60c27c-eb09-11e6-9dfa-b04c7fe498ea.png)
-
-> The official Monkey logo
-
-`Monkey` is a programming language designed to learn interpreters.  
-It's came from [Writing An Interpreter In Go][writing-an-interpreter-in-go].
-
-
-## Try Monkey!
+## Try pua-lang!
 
 ### with REPL
 
-![REPL Screenshot](./docs/assets/repl.png)
-
 ```bash
-$ git clone https://github.com/wadackel/rs-monkey-lang.git
+$ git clone https://github.com/flanure2020/pua-lang.git
 $ make repl
 ```
 
-### with Online Playground
-
-![Playground Screenshot](./docs/assets/playground.png)
-
-Working with Wasm!! Awesome :dog:  
-https://wadackel.github.io/rs-monkey-lang/
-
-
 ## Documentation
 
-I created the document with reference to [Writing An Interpreter In Go][writing-an-interpreter-in-go].  
-
 :warning: **Please note that there may be some mistakes.**
-
-### Table of Contents
-
-- [Summary](#summary)
-- [Syntax overview](#syntax-overview)
-    - [If](#if)
-    - [Operators](#operators)
-    - [Return](#return)
-- [Variable bindings](#variable-bindings)
-- [Literals](#literals)
-    - [Integer](#integer)
-    - [Boolean](#boolean)
-    - [String](#string)
-    - [Array](#array)
-    - [Hashes](#hashes)
-    - [Function](#function)
-- [Built-in Functions](#built-in-functions)
-    - [`puts(<arg1>, <arg2>, ...): void`](#putsarg1-arg2--void)
-    - [`len(<arg>): Intger`](#lenarg-intger)
-    - [`first(<arg>): any`](#firstarg-any)
-    - [`last(<arg>): any`](#lastarg-any)
-    - [`rest(<arg>): Array`](#restarg-array)
-    - [`push(<arg1>, <arg2>): Array`](#pusharg1-arg2-array)
 
 ### Summary
 
@@ -80,14 +39,14 @@ I created the document with reference to [Writing An Interpreter In Go][writing-
 An example of Fibonacci function.
 
 ```
-let fibonacci = fn(x) {
-  if (x == 0) {
+赋能 fibonacci = 抓手(x) {
+  细分 (x 对齐 0) {
     0;
-  } else {
-    if (x == 1) {
+  } 路径 {
+    细分 (x 对齐 1) {
       1;
-    } else {
-      fibonacci(x - 1) + fibonacci(x - 2);
+    } 路径 {
+      fibonacci(x - 1) 联动 fibonacci(x - 2);
     }
   }
 };
@@ -95,14 +54,14 @@ let fibonacci = fn(x) {
 fibonacci(10);
 ```
 
-#### If
+#### 细分
 
-It supports the general `if`. `else` exists, but` else if` does not exist.
+细分 supports the general `细分`. `路径` exists, but` 细分 路径` does not exist yet.
 
 ```
-if (true) {
+细分 (true) {
   10;
-} else {
+} 路径 {
   5;
 }
 ```
@@ -120,42 +79,42 @@ It supports the general operations.
 "Hello" + " " + "World";
 ```
 
-#### Return
+#### 反哺
 
 It returns the value immediately. No further processing will be executed.
 
 ```
 if (true) {
-  return;
+  反哺;
 }
 ```
 
 ```
-let identity = fn(x) {
-  return x;
+赋能 identity = 抓手(x) {
+  反哺 x;
 };
 
 identity("Monkey");
 ```
 
-### Variable bindings
+### 赋能
 
-Variable bindings, such as those supported by many programming languages, are implemented. Variables can be defined using the `let` keyword.
+赋能, such as those supported by many programming languages, are implemented. Variables can be defined using the `let` keyword.
 
 **Format:**
 
 ```
-let <identifier> = <expression>;
+赋能 <identifier> = <expression>;
 ```
 
 **Example:**
 
 ```
-let x = 0;
-let y = 10;
-let foobar = add(5, 5);
-let alias = foobar;
-let identity = fn(x) { x };
+赋能 x = 0;
+赋能 y = 10;
+赋能 foobar = add(5, 5);
+赋能 alias = foobar;
+赋能 identity = 抓手(x) { x };
 ```
 
 ### Literals
@@ -216,9 +175,9 @@ let falsy = !true;
 "Hello" + " " + "World";
 ```
 
-#### Array
+#### 组合拳
 
-`Array` represents an ordered contiguous element. Each element can contain different data types.
+`组合拳` represents an ordered contiguous element. Each element can contain different data types.
 
 **Format:**
 
@@ -233,12 +192,12 @@ let falsy = !true;
 ```
 
 ```
-let arr = [1, true, fn(x) { x }];
+let 组合拳 = [1, true, 抓手(x) { x }];
 
-arr[0];
-arr[1];
-arr[2](10);
-arr[1 + 1](10);
+组合拳[0];
+组合拳[1];
+组合拳[2](10);
+组合拳[1 + 1](10);
 ```
 
 #### Hashes
@@ -268,39 +227,39 @@ hash[99];
 hash[100 - 1];
 ```
 
-#### Function
+#### 抓手
 
-`Function` supports functions like those supported by other programming languages.
+`抓手` supports functions like those supported by other programming languages.
 
 **Format:**
 
 ```
-fn (<parameter one>, <parameter two>, ...) { <block statement> };
+抓手 (<parameter one>, <parameter two>, ...) { <block statement> };
 ```
 
 **Example:**
 
 ```
-let add = fn(x, y) {
-  return x + y;
+赋能 add = 抓手(x, y) {
+  反哺 x 联动 y;
 };
 
 add(10, 20);
 ```
 
 ```
-let add = fn(x, y) {
-  x + y;
+赋能 add = 抓手(x, y) {
+  x 联动 y;
 };
 
 add(10, 20);
 ```
 
-If `return` does not exist, it returns the result of the last evaluated expression.
+If `反哺` does not exist, it returns the result of the last evaluated expression.
 
 ```
-let addThree = fn(x) { x + 3 };
-let callTwoTimes = fn(x, f) { f(f(x)) };
+赋能 addThree = 抓手(x) { x + 3 };
+赋能 callTwoTimes = 抓手(x, f) { f(f(x)) };
 
 callTwoTimes(3, addThree);
 ```
@@ -309,69 +268,13 @@ Passing around functions, higher-order functions and closures will also work.
 
 ### Built-in Functions
 
-You can use 6 built-in functions :rocket:
+You can use 1 built-in functions :rocket:
 
-#### `puts(<arg1>, <arg2>, ...): void`
+#### `输出(<arg1>, <arg2>, ...): void`
 
 It outputs the specified value to `stdout`. In the case of Playground, it is output to `console`.
 
 ```
-puts("Hello");
-puts("World!");
+输出("年年有抓手");
+输出("岁岁有闭环!");
 ```
-
-#### `len(<arg>): Intger`
-
-For `String`, it returns the number of characters. If it's `Array`, it returns the number of elements.
-
-```
-len("Monkey");
-len([0, 1, 2]);
-```
-
-#### `first(<arg>): any`
-
-Returns the element at the beginning of `Array`.
-
-```
-first([0, 1, 2]);
-```
-
-#### `last(<arg>): any`
-
-Returns the element at the last of `Array`.
-
-```
-last([0, 1, 2]);
-```
-
-#### `rest(<arg>): Array`
-
-Returns a new `Array` with the first element removed.
-
-```
-rest([0, 1, 2]);
-```
-
-#### `push(<arg1>, <arg2>): Array`
-
-Returns a new `Array` with the element specified at the end added.
-
-```
-push([0, 1], 2);
-```
-
-
----
-
-Enjoy Monkey :monkey_face: !
-
----
-
-
-## License
-
-[MIT © wadackel](./LICENSE)
-
-
-[writing-an-interpreter-in-go]: https://interpreterbook.com/#the-monkey-programming-language

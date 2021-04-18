@@ -1,19 +1,21 @@
-use token::Token;
+extern crate cjk;
+use crate::token::Token;
 
-pub struct Lexer<'a> {
-    input: &'a str,
+pub struct Lexer {
+    input: Vec<char>,
     pos: usize,
     next_pos: usize,
-    ch: u8,
+    ch: char,
 }
 
-impl<'a> Lexer<'a> {
-    pub fn new(input: &'a str) -> Self {
+impl Lexer {
+    pub fn new(origin_input: &str) -> Self {
+        let input = origin_input.chars().collect::<Vec<char>>();
         let mut lexer = Lexer {
             input,
             pos: 0,
             next_pos: 0,
-            ch: 0,
+            ch: '\0',
         };
 
         lexer.read_char();
@@ -23,30 +25,30 @@ impl<'a> Lexer<'a> {
 
     fn read_char(&mut self) {
         if self.next_pos >= self.input.len() {
-            self.ch = 0;
+            self.ch = '\0';
         } else {
-            self.ch = self.input.as_bytes()[self.next_pos];
+            self.ch = self.input[self.next_pos];
         }
         self.pos = self.next_pos;
         self.next_pos += 1;
     }
 
-    fn nextch(&mut self) -> u8 {
+    fn nextch(&mut self) -> char {
         if self.next_pos >= self.input.len() {
-            return 0;
+            return '\0';
         } else {
-            return self.input.as_bytes()[self.next_pos];
+            return self.input[self.next_pos];
         }
     }
 
-    fn nextch_is(&mut self, ch: u8) -> bool {
+    fn nextch_is(&mut self, ch: char) -> bool {
         self.nextch() == ch
     }
 
     fn skip_whitespace(&mut self) {
         loop {
             match self.ch {
-                b' ' | b'\t' => {
+                ' ' | '\t' => {
                     self.read_char();
                 }
                 _ => {
@@ -60,70 +62,76 @@ impl<'a> Lexer<'a> {
         self.skip_whitespace();
 
         let tok = match self.ch {
-            b'=' => {
-                if self.nextch_is(b'=') {
+            '=' => {
+                if self.nextch_is('=') {
                     self.read_char();
                     Token::Equal
                 } else {
                     Token::Assign
                 }
             }
-            b'+' => Token::Plus,
-            b'-' => Token::Minus,
-            b'!' => {
-                if self.nextch_is(b'=') {
+            '+' => Token::Plus,
+            '-' => Token::Minus,
+            '!' => {
+                if self.nextch_is('=') {
                     self.read_char();
                     Token::NotEqual
                 } else {
                     Token::Bang
                 }
             }
-            b'/' => Token::Slash,
-            b'*' => Token::Asterisk,
-            b'<' => {
-                if self.nextch_is(b'=') {
+            '/' => Token::Slash,
+            '*' => Token::Asterisk,
+            '<' => {
+                if self.nextch_is('=') {
                     self.read_char();
                     Token::LessThanEqual
                 } else {
                     Token::LessThan
                 }
             }
-            b'>' => {
-                if self.nextch_is(b'=') {
+            '>' => {
+                if self.nextch_is('=') {
                     self.read_char();
                     Token::GreaterThanEqual
                 } else {
                     Token::GreaterThan
                 }
             }
-            b'(' => Token::Lparen,
-            b')' => Token::Rparen,
-            b'{' => Token::Lbrace,
-            b'}' => Token::Rbrace,
-            b'[' => Token::Lbracket,
-            b']' => Token::Rbracket,
-            b',' => Token::Comma,
-            b';' => Token::Semicolon,
-            b':' => Token::Colon,
-            b'a'...b'z' | b'A'...b'Z' | b'_' => {
+            '(' => Token::Lparen,
+            ')' => Token::Rparen,
+            '{' => Token::Lbrace,
+            '}' => Token::Rbrace,
+            '[' => Token::Lbracket,
+            ']' => Token::Rbracket,
+            ',' => Token::Comma,
+            ';' => Token::Semicolon,
+            ':' => Token::Colon,
+            'a'...'z' | 'A'...'Z' | '_' => {
                 return self.consume_identifier();
             }
-            b'0'...b'9' => {
+            '0'...'9' => {
                 return self.consume_number();
             }
-            b'"' => {
+            '"' => {
                 return self.consume_string();
             }
-            b'\n' => {
-                if self.nextch_is(b'\n') {
+            '\n' => {
+                if self.nextch_is('\n') {
                     Token::Blank
                 } else {
                     self.read_char();
                     return self.next_token();
                 }
             }
-            0 => Token::Eof,
-            _ => Token::Illegal,
+            '\0' => Token::Eof,
+            _ => {
+                if cjk::is_cjk_codepoint(self.ch) {
+                    return self.consume_cjk_identifier();
+                } else {
+                    Token::Illegal
+                }
+            },
         };
 
         self.read_char();
@@ -131,12 +139,39 @@ impl<'a> Lexer<'a> {
         return tok;
     }
 
+    fn consume_cjk_identifier(&mut self) -> Token {
+        let start_pos = self.pos;
+
+        loop {
+            if cjk::is_cjk_codepoint(self.ch) {
+                self.read_char();
+            } else {
+                break;
+            }
+        }
+
+        let literal = self.input[start_pos..self.pos].iter().collect::<String>();
+
+        match literal.as_str() {
+            "抓手" => Token::Func,
+            "赋能" => Token::Let,
+            "true" => Token::Bool(true),
+            "false" => Token::Bool(false),
+            "细分" => Token::If,
+            "路径" => Token::Else,
+            "反哺" => Token::Return,
+            "对齐" => Token::Equal,
+            "联动" => Token::Plus,
+            _ => Token::Ident(String::from(literal)),
+        }
+    }
+
     fn consume_identifier(&mut self) -> Token {
         let start_pos = self.pos;
 
         loop {
             match self.ch {
-                b'a'...b'z' | b'A'...b'Z' | b'_' => {
+                'a'...'z' | 'A'...'Z' | '_' => {
                     self.read_char();
                 }
                 _ => {
@@ -145,9 +180,9 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        let literal = &self.input[start_pos..self.pos];
+        let literal = self.input[start_pos..self.pos].iter().collect::<String>();
 
-        match literal {
+        match literal.as_str() {
             "fn" => Token::Func,
             "let" => Token::Let,
             "true" => Token::Bool(true),
@@ -164,7 +199,7 @@ impl<'a> Lexer<'a> {
 
         loop {
             match self.ch {
-                b'0'...b'9' => {
+                '0'...'9' => {
                     self.read_char();
                 }
                 _ => {
@@ -173,7 +208,7 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        let literal = &self.input[start_pos..self.pos];
+        let literal = &self.input[start_pos..self.pos].iter().collect::<String>();
 
         Token::Int(literal.parse::<i64>().unwrap())
     }
@@ -185,10 +220,10 @@ impl<'a> Lexer<'a> {
 
         loop {
             match self.ch {
-                b'"' | 0 => {
-                    let literal = &self.input[start_pos..self.pos];
+                '"' | '\0' => {
+                    let literal = self.input[start_pos..self.pos].iter().collect::<String>();
                     self.read_char();
-                    return Token::String(literal.to_string());
+                    return Token::String(literal);
                 }
                 _ => {
                     self.read_char();
@@ -351,4 +386,41 @@ if (5 < 10) {
             assert_eq!(expect, tok);
         }
     }
+
+    #[test]
+    fn test_cjk_next_token() {
+        let input = r#"
+赋能 fib = 抓手(n) {
+    细分 (n 对齐 0) {
+        反哺 0;
+    } 路径 细分 (n 对齐 1) {
+        反哺 1;
+    } 路径 {
+        反哺 fib(n-1) + fib(n-2);
+    }
+};
+"#;
+
+        let tests = vec![
+            Token::Let,
+            Token::Ident(String::from("fib")),
+            Token::Assign,
+            Token::Func,
+            Token::Lparen,
+            Token::Ident(String::from("n")),
+            Token::Rparen,
+            Token::Lbrace,
+        ];
+
+        let mut lexer = Lexer::new(input);
+
+        for expect in tests {
+            let tok = lexer.next_token();
+
+            assert_eq!(expect, tok);
+        }
+    }
+
+
+
 }
