@@ -99,7 +99,7 @@ identity("Monkey");
 
 ### 赋能
 
-赋能, such as those supported by many programming languages, are implemented. Variables can be defined using the `let` keyword.
+赋能, such as those supported by many programming languages, are implemented. Variables can be defined using the `赋能` keyword.
 
 **Format:**
 
