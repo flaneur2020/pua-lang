@@ -7,7 +7,7 @@
 pua-lang is a dialect of The Monkey Programming Language. The implementation is a fork of [rs-monkey-lang](https://github.com/wadackel/rs-monkey-lang).
 
 `Monkey` is a programming language designed to learn interpreters.
-It's came from [Writing An Interpreter In Go](https://compilerbook.com/).
+It comes from [Writing An Interpreter In Go](https://compilerbook.com/).
 
 ## Try pua-lang!
 
