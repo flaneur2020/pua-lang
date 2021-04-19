@@ -163,6 +163,7 @@ impl Lexer {
             "对齐" => Token::Equal,
             "联动" => Token::Plus,
             "差异" => Token::Minus,
+            "倾斜" => Token::Slash,
             _ => Token::Ident(String::from(literal)),
         }
     }

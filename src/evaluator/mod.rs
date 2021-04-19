@@ -699,6 +699,10 @@ identity(100);
             (
                 "let diff = fn(x, y) { x 差异 y; }; diff(5, 5);",
                 Some(Object::Int(0)),
+            ),
+            (
+                "let divise = fn(x, y) { x 倾斜 y; }; divise(10, 5);",
+                Some(Object::Int(2)),
             )
         ];
 
