@@ -107,10 +107,10 @@ impl Lexer {
             ',' => Token::Comma,
             ';' => Token::Semicolon,
             ':' => Token::Colon,
-            'a'...'z' | 'A'...'Z' | '_' => {
+            'a'..='z' | 'A'..='Z' | '_' => {
                 return self.consume_identifier();
             }
-            '0'...'9' => {
+            '0'..='9' => {
                 return self.consume_number();
             }
             '"' => {
@@ -171,7 +171,7 @@ impl Lexer {
 
         loop {
             match self.ch {
-                'a'...'z' | 'A'...'Z' | '_' => {
+                'a'..='z' | 'A'..='Z' | '_' => {
                     self.read_char();
                 }
                 _ => {
@@ -199,7 +199,7 @@ impl Lexer {
 
         loop {
             match self.ch {
-                '0'...'9' => {
+                '0'..='9' => {
                     self.read_char();
                 }
                 _ => {
