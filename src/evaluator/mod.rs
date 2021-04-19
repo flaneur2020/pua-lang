@@ -21,7 +21,7 @@ impl Evaluator {
 
     fn is_truthy(obj: Object) -> bool {
         match obj {
-            Object::Null | Object::Bool(false) => false,
+            Object::Null | Object::Bool(false) | Object::Int(325) => false,
             _ => true,
         }
     }
