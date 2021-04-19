@@ -155,8 +155,8 @@ impl Lexer {
         match literal.as_str() {
             "抓手" => Token::Func,
             "赋能" => Token::Let,
-            "true" => Token::Bool(true),
-            "false" => Token::Bool(false),
+            "三七五" => Token::Bool(true),
+            "三二五" => Token::Bool(false),
             "细分" => Token::If,
             "路径" => Token::Else,
             "反哺" => Token::Return,
