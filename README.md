@@ -84,7 +84,7 @@ It supports the general operations.
 It returns the value immediately. No further processing will be executed.
 
 ```
-if (true) {
+细分 (true) {
   反哺;
 }
 ```
@@ -154,8 +154,8 @@ true | false;
 true;
 false;
 
-let truthy = !false;
-let falsy = !true;
+赋能 truthy = !false;
+赋能 falsy = !true;
 ```
 
 #### String
@@ -192,7 +192,7 @@ let falsy = !true;
 ```
 
 ```
-let 组合拳 = [1, true, 抓手(x) { x }];
+赋能 组合拳 = [1, true, 抓手(x) { x }];
 
 组合拳[0];
 组合拳[1];
@@ -200,9 +200,9 @@ let 组合拳 = [1, true, 抓手(x) { x }];
 组合拳[1 + 1](10);
 ```
 
-#### Hashes
+#### 载体
 
-`Hash` expresses data associating keys with values.
+`载体` expresses data associating keys with values.
 
 **Format:**
 
@@ -213,18 +213,18 @@ let 组合拳 = [1, true, 抓手(x) { x }];
 **Example:**
 
 ```
-let hash = {
+赋能 载体 = {
   "name": "Jimmy",
   "age": 72,
   true: "a boolean",
   99: "an integer"
 };
 
-hash["name"];
-hash["a" + "ge"];
-hash[true];
-hash[99];
-hash[100 - 1];
+载体["name"];
+载体["a" + "ge"];
+载体[true];
+载体[99];
+载体[100 - 1];
 ```
 
 #### 抓手
