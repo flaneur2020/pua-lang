@@ -8,6 +8,8 @@ pub fn new_builtins() -> HashMap<String, Object> {
     builtins.insert(String::from("last"), Object::Builtin(1, monkey_last));
     builtins.insert(String::from("rest"), Object::Builtin(1, monkey_rest));
     builtins.insert(String::from("push"), Object::Builtin(2, monkey_push));
+    builtins.insert(String::from("淘汰"), Object::Builtin(-1, pua_quit));
+    builtins.insert(String::from("输出"), Object::Builtin(-1, pua_output));
     builtins
 }
 
@@ -61,4 +63,15 @@ fn monkey_push(args: Vec<Object>) -> Object {
         }
         o => Object::Error(format!("argument to `push` must be array. got {}", o)),
     }
+}
+
+fn pua_output(args: Vec<Object>) -> Object {
+    for arg in args {
+        println!("{}", arg);
+    }
+    Object::Null
+}
+
+fn pua_quit(_: Vec<Object>) -> Object {
+    std::process::exit(0);
 }
