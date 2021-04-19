@@ -14,7 +14,7 @@ It's came from [Writing An Interpreter In Go](https://compilerbook.com/).
 ### with REPL
 
 ```bash
-$ git clone https://github.com/flanure2020/pua-lang.git
+$ git clone https://github.com/flaneur2020/pua-lang.git
 $ make repl
 ```
 
