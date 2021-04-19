@@ -162,6 +162,8 @@ impl Lexer {
             "反哺" => Token::Return,
             "对齐" => Token::Equal,
             "联动" => Token::Plus,
+            "差异" => Token::Minus,
+            "倾斜" => Token::Slash,
             _ => Token::Ident(String::from(literal)),
         }
     }
@@ -396,7 +398,7 @@ if (5 < 10) {
     } 路径 细分 (n 对齐 1) {
         反哺 1;
     } 路径 {
-        反哺 fib(n-1) + fib(n-2);
+        反哺 fib(n 差异 1) + fib(n 差异 2);
     }
 };
 "#;
@@ -420,7 +422,5 @@ if (5 < 10) {
             assert_eq!(expect, tok);
         }
     }
-
-
 
 }
