@@ -99,7 +99,7 @@ identity("Monkey");
 
 ### 赋能
 
-赋能, such as those supported by many programming languages, are implemented. Variables can be defined using the `赋能` keyword.
+赋能, such as those supported by many programming languages, is implemented. Variables can be defined using the `赋能` keyword.
 
 **Format:**
 
@@ -140,7 +140,7 @@ Five types of literals are implemented.
 
 #### Boolean
 
-`Boolean` represents a general boolean types.
+`Boolean` represents a general boolean type.
 
 **Format:**
 
@@ -268,11 +268,11 @@ Passing around functions, higher-order functions and closures will also work.
 
 ### Built-in Functions
 
-You can use 1 built-in functions :rocket:
+You can use 1 built-in function :rocket:
 
 #### `输出(<arg1>, <arg2>, ...): void`
 
-It outputs the specified value to `stdout`. In the case of Playground, it is output to `console`.
+It outputs the specified value to `stdout`. In the case of Playground, it outputs to `console`.
 
 ```
 输出("年年有抓手");
