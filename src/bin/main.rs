@@ -4,7 +4,6 @@ extern crate cjk;
 
 use monkey::evaluator::builtins::new_builtins;
 use monkey::evaluator::env::Env;
-use monkey::evaluator::object::Object;
 use monkey::evaluator::Evaluator;
 use monkey::lexer::Lexer;
 use monkey::parser::Parser;
@@ -15,21 +14,10 @@ use std::rc::Rc;
 
 fn main() {
     let mut rl = Editor::<()>::new();
-    let mut env = Env::from(new_builtins());
-
-    env.set(
-        String::from("输出"),
-        &Object::Builtin(-1, |args| {
-            for arg in args {
-                println!("{}", arg);
-            }
-            Object::Null
-        }),
-    );
-
+    let env = Env::from(new_builtins());
     let mut evaluator = Evaluator::new(Rc::new(RefCell::new(env)));
 
-    println!("Hello! This is the Monkey programming language!");
+    println!("Hello! This is the PUA programming language!");
     println!("Feel free to type in commands\n");
 
     loop {
