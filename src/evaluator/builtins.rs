@@ -85,6 +85,13 @@ fn pua_output(args: Vec<Object>) -> Object {
     Object::Null
 }
 
-fn pua_quit(_: Vec<Object>) -> Object {
-    std::process::exit(0);
+fn pua_quit(args: Vec<Object>) -> Object {
+    match args.len() {
+        0 => std::process::exit(0),
+        1 => match &args[0] {
+            Object::Int(i) => std::process::exit(*i as i32),
+            o => Object::Error(format!("argument to `quit` must be int. got {}", o))
+        },
+        _ => Object::Error(format!("Too many arguments to `quit` (want 0 or 1, got {})", args.len()))
+    }
 }
