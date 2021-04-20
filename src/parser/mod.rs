@@ -120,7 +120,7 @@ impl Parser {
         self.errors.push(ParseError::new(
             ParseErrorKind::UnexpectedToken,
             format!(
-                "no prefix parse function for  \"{:?}\" found",
+                "no prefix parse function for \"{:?}\" found",
                 self.current_token,
             ),
         ));
@@ -145,7 +145,11 @@ impl Parser {
 
         let mut block = vec![];
 
-        while !self.current_token_is(Token::Rbrace) && !self.current_token_is(Token::Eof) {
+        while !self.current_token_is(Token::Rbrace) {
+            if self.current_token_is(Token::Eof) {
+                self.error_next_token(Token::Rbrace);
+                return block;
+            }
             match self.parse_stmt() {
                 Some(stmt) => block.push(stmt),
                 None => {}
