@@ -13,7 +13,7 @@ impl fmt::Display for ParseError {
         match &*self {
             ParseError::UnexpectedToken { want: w, got: g } => match w {
                 Some(w) => write!(f, "Unexpected Token: expected {:?}, got {:?}", w, g),
-                None => write!(f, "Unexpected Token: no prefix rule for {:?}", w),
+                None => write!(f, "Unexpected Token: no prefix rule for {:?}", g),
             },
         }
     }
