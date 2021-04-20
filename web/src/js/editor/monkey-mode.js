@@ -1,16 +1,19 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/simple';
 
+// This is still profoundly broken.
+// * The keyword part barely works. I have no idea why \b is doing that, but at least it's acting the same way as the regex.
+// * The operator and the Unicode identifier patterns just don't work. I have no idea why. The regexes match!
 CodeMirror.defineSimpleMode('monkey', {
   start: [
     { regex: /".*"/, token: 'string' },
-    { regex: /(?:fn|let|return|if|else)\b/, token: 'keyword' },
-    { regex: /true|false|null/, token: 'atom' },
+    { regex: /(?:fn|let|return|if|else|抓手|赋能|细分|路径|反哺)(?:\b|(?=\s|[()]))/, token: 'keyword' },
+    { regex: /true|false|null|三七五|三二五/, token: 'atom' },
     { regex: /\d+|[-+]?(?:\.\d+|\d+\.?\d*)/, token: 'number' },
-    { regex: /[-+\/*=<>!]/, token: 'operator' },
+    { regex: /[-+\/*=<>!]|对齐|联动|差异|倾斜/, token: 'operator' },
     { regex: /[\{\[\(]/, indent: true },
     { regex: /[\}\]\)]/, dedent: true },
-    { regex: /[a-z$][\w$]*/, token: 'variable' },
+    { regex: /\p{XID_Start}\p{XID_Continue}*|[a-z$][\w$]*/u, token: 'variable' },
   ],
   comment: [],
   meta: {},

@@ -4,7 +4,7 @@ extern crate unicode_xid;
 extern crate unicode_normalization;
 use crate::token::Token;
 
-/// All tokens are nfc-normaized.
+/// All variable names are nfc-normaized.
 pub fn nfc_normalize(string: &str) -> String {
     use self::unicode_normalization::{is_nfc_quick, IsNormalized, UnicodeNormalization};
     match is_nfc_quick(string.chars()) {

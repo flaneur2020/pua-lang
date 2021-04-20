@@ -36,6 +36,7 @@ $ make repl
   - arithmetic expressions
   - built-in functions
   - first-class and higher-order functions • closures
+- Unicode identifiers (UAX #31, XID). Including Emojis!
 - Ridiculous naming for the Aba-aba. Comparison with Monkey:
 
 |Monkey|pua-lang|Explanation|
@@ -47,8 +48,8 @@ $ make repl
 |let|赋能|"enable", in a fancy way|
 |fn|抓手|"handle", as in getting a handle on things|
 |return|反哺|"repay", used in Alibaba as a general term for feedback in systems|
-|Array|组合拳|"combo move"; not implemented|
-|Hash|载体|"carrier"; not implemented|
+|Array|组合拳|"combo move"; not yet a word in the language|
+|Hash|载体|"carrier"; not yet a word in the language|
 |=|对齐|"align"|
 |+|联动|"linkage"|
 |-|差异|"difference"|
@@ -63,19 +64,19 @@ The precise set of renames may change from time to time as we explore new ~~avan
 An example of Fibonacci function.
 
 ```
-赋能 fibonacci = 抓手(x) {
+赋能 堆叠_fib = 抓手(x) {
   细分 (x 对齐 0) {
     0;
   } 路径 {
     细分 (x 对齐 1) {
       1;
     } 路径 {
-      fibonacci(x - 1) 联动 fibonacci(x - 2);
+      堆叠_fib(x - 1) 联动 堆叠_fib(x - 2);
     }
   }
 };
 
-fibonacci(10);
+堆叠_fib(10);
 ```
 
 #### 细分
@@ -114,11 +115,11 @@ It returns the value immediately. No further processing will be executed.
 ```
 
 ```
-赋能 identity = 抓手(x) {
-  反哺 x;
+赋能 不变 = 抓手(工资p6) {
+  反哺 工资p6;
 };
 
-identity("Monkey");
+不变("👨‍💻🐒烧酒");
 ```
 
 ### 赋能
@@ -136,8 +137,8 @@ identity("Monkey");
 ```
 赋能 x = 0;
 赋能 y = 10;
-赋能 foobar = add(5, 5);
-赋能 alias = foobar;
+赋能 福报 = add(5, 5);
+赋能 alias = 福报;
 赋能 identity = 抓手(x) { x };
 ```
 
