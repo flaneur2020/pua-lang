@@ -1,12 +1,11 @@
-extern crate monkey;
+extern crate pua_lang;
 extern crate rustyline;
-extern crate cjk;
 
-use monkey::evaluator::builtins::new_builtins;
-use monkey::evaluator::env::Env;
-use monkey::evaluator::Evaluator;
-use monkey::lexer::Lexer;
-use monkey::parser::Parser;
+use pua_lang::evaluator::builtins::new_builtins;
+use pua_lang::evaluator::env::Env;
+use pua_lang::evaluator::Evaluator;
+use pua_lang::lexer::Lexer;
+use pua_lang::parser::Parser;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 use std::cell::RefCell;

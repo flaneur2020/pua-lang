@@ -3,11 +3,18 @@ use std::collections::HashMap;
 
 pub fn new_builtins() -> HashMap<String, Object> {
     let mut builtins = HashMap::new();
+    // Monkey builtins
     builtins.insert(String::from("len"), Object::Builtin(1, monkey_len));
     builtins.insert(String::from("first"), Object::Builtin(1, monkey_first));
     builtins.insert(String::from("last"), Object::Builtin(1, monkey_last));
     builtins.insert(String::from("rest"), Object::Builtin(1, monkey_rest));
     builtins.insert(String::from("push"), Object::Builtin(2, monkey_push));
+    builtins.insert(String::from("puts"), Object::Builtin(-1, pua_output));
+
+    // PUA builtin, but not aba-aba
+    builtins.insert(String::from("quit"), Object::Builtin(-1, pua_quit));
+
+    // Aba-aba builtins
     builtins.insert(String::from("淘汰"), Object::Builtin(-1, pua_quit));
     builtins.insert(String::from("输出"), Object::Builtin(-1, pua_output));
     builtins

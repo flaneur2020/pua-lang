@@ -18,7 +18,7 @@ build_repl:
 
 .PHONY: build_wasm
 build_wasm:
-	cargo build --bin wasm --release --target wasm32-unknown-unknown
+	cargo build --bin wasm --release --target wasm32-unknown-unknown --features=wasm
 	wasm-gc target/wasm32-unknown-unknown/release/wasm.wasm web/src/monkey.wasm
 
 .PHONY: web_deploy
@@ -28,4 +28,4 @@ web_deploy:
 
 .PHONY: repl
 repl:
-	cargo run --bin monkey --features="binaries"
+	cargo run --bin pua-lang --features="binaries"

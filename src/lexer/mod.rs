@@ -1,5 +1,74 @@
-extern crate cjk;
+/// Unicode lexer for the PUA language.
+/// Some functions taken from `rust/compiler/rustc_lexer/src/lib.rs`.
+extern crate unicode_xid;
+extern crate unicode_normalization;
 use crate::token::Token;
+
+/// All tokens are nfc-normaized.
+pub fn nfc_normalize(string: &str) -> String {
+    use self::unicode_normalization::{is_nfc_quick, IsNormalized, UnicodeNormalization};
+    match is_nfc_quick(string.chars()) {
+        IsNormalized::Yes => String::from(string),
+        _ => {
+            let normalized_str: String = string.chars().nfc().collect();
+            String::from(&normalized_str)
+        }
+    }
+}
+
+/// True if `c` is considered a whitespace according to PUA. Does not include \n.
+fn is_whitespace(c: char) -> bool {
+    // This is Pattern_White_Space minus \n.
+    //
+    // Note that this set is stable (ie, it doesn't change with different
+    // Unicode versions), so it's ok to just hard-code the values.
+
+    matches!(
+        c,
+        // Usual ASCII suspects
+        '\u{0009}'   // \t
+        | '\u{000C}' // form feed
+        | '\u{000D}' // \r
+        | '\u{000B}' // vertical tab
+        | '\u{0020}' // space
+
+        // NEXT LINE from latin1
+        | '\u{0085}'
+
+        // Bidi markers
+        | '\u{200E}' // LEFT-TO-RIGHT MARK
+        | '\u{200F}' // RIGHT-TO-LEFT MARK
+
+        // Dedicated whitespace characters from Unicode
+        | '\u{2028}' // LINE SEPARATOR
+        | '\u{2029}' // PARAGRAPH SEPARATOR
+    )
+}
+
+/// True if `c` is valid as a first character of an identifier.
+/// See [Rust language reference](https://doc.rust-lang.org/reference/identifiers.html) for
+/// a formal definition of valid identifier name.
+fn is_id_start(c: char) -> bool {
+    // This is XID_Start OR '_' (which formally is not a XID_Start).
+    // We also add fast-path for ascii idents
+    ('a'..='z').contains(&c)
+        || ('A'..='Z').contains(&c)
+        || c == '_'
+        || (c > '\x7f' && unicode_xid::UnicodeXID::is_xid_start(c))
+}
+
+/// True if `c` is valid as a non-first character of an identifier.
+/// See [Rust language reference](https://doc.rust-lang.org/reference/identifiers.html) for
+/// a formal definition of valid identifier name.
+fn is_id_continue(c: char) -> bool {
+    // This is exactly XID_Continue.
+    // We also add fast-path for ascii idents
+    ('a'..='z').contains(&c)
+        || ('A'..='Z').contains(&c)
+        || ('0'..='9').contains(&c)
+        || c == '_'
+        || (c > '\x7f' && unicode_xid::UnicodeXID::is_xid_continue(c))
+}
 
 pub struct Lexer {
     input: Vec<char>,
@@ -47,13 +116,10 @@ impl Lexer {
 
     fn skip_whitespace(&mut self) {
         loop {
-            match self.ch {
-                ' ' | '\t' => {
-                    self.read_char();
-                }
-                _ => {
-                    break;
-                }
+            if is_whitespace(self.ch) {
+                self.read_char();
+            } else {
+                break;
             }
         }
     }
@@ -107,9 +173,6 @@ impl Lexer {
             ',' => Token::Comma,
             ';' => Token::Semicolon,
             ':' => Token::Colon,
-            'a'..='z' | 'A'..='Z' | '_' => {
-                return self.consume_identifier();
-            }
             '0'..='9' => {
                 return self.consume_number();
             }
@@ -126,8 +189,8 @@ impl Lexer {
             }
             '\0' => Token::Eof,
             _ => {
-                if cjk::is_cjk_codepoint(self.ch) {
-                    return self.consume_cjk_identifier();
+                if is_id_start(self.ch) {
+                    return self.consume_identifier();
                 } else {
                     Token::Illegal
                 }
@@ -139,11 +202,11 @@ impl Lexer {
         return tok;
     }
 
-    fn consume_cjk_identifier(&mut self) -> Token {
+    fn consume_identifier(&mut self) -> Token {
         let start_pos = self.pos;
 
         loop {
-            if cjk::is_cjk_codepoint(self.ch) {
+            if is_id_continue(self.ch) {
                 self.read_char();
             } else {
                 break;
@@ -153,6 +216,15 @@ impl Lexer {
         let literal = self.input[start_pos..self.pos].iter().collect::<String>();
 
         match literal.as_str() {
+            // Monkey keywords
+            "fn" => Token::Func,
+            "let" => Token::Let,
+            "true" => Token::Bool(true),
+            "false" => Token::Bool(false),
+            "if" => Token::If,
+            "else" => Token::Else,
+            "return" => Token::Return,
+            // PUA Aba-aba keywords
             "抓手" => Token::Func,
             "赋能" => Token::Let,
             "三七五" => Token::Bool(true),
@@ -164,35 +236,7 @@ impl Lexer {
             "联动" => Token::Plus,
             "差异" => Token::Minus,
             "倾斜" => Token::Slash,
-            _ => Token::Ident(String::from(literal)),
-        }
-    }
-
-    fn consume_identifier(&mut self) -> Token {
-        let start_pos = self.pos;
-
-        loop {
-            match self.ch {
-                'a'..='z' | 'A'..='Z' | '_' => {
-                    self.read_char();
-                }
-                _ => {
-                    break;
-                }
-            }
-        }
-
-        let literal = self.input[start_pos..self.pos].iter().collect::<String>();
-
-        match literal.as_str() {
-            "fn" => Token::Func,
-            "let" => Token::Let,
-            "true" => Token::Bool(true),
-            "false" => Token::Bool(false),
-            "if" => Token::If,
-            "else" => Token::Else,
-            "return" => Token::Return,
-            _ => Token::Ident(String::from(literal)),
+            _ => Token::Ident(nfc_normalize(&literal)),
         }
     }
 
