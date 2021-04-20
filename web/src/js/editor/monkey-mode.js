@@ -7,7 +7,10 @@ import 'codemirror/addon/mode/simple';
 CodeMirror.defineSimpleMode('monkey', {
   start: [
     { regex: /".*"/, token: 'string' },
-    { regex: /(?:fn|let|return|if|else|抓手|赋能|细分|路径|反哺)(?:\b|(?=\s|[()]))/, token: 'keyword' },
+    {
+      regex: /(?:fn|let|return|if|else|抓手|赋能|细分|路径|反哺)(?:\b|(?=\s|[()]))/,
+      token: 'keyword',
+    },
     { regex: /true|false|null|三七五|三二五/, token: 'atom' },
     { regex: /\d+|[-+]?(?:\.\d+|\d+\.?\d*)/, token: 'number' },
     { regex: /[-+\/*=<>!]|对齐|联动|差异|倾斜/, token: 'operator' },

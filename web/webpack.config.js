@@ -14,18 +14,14 @@ module.exports = {
 
   output: {
     path: DIST_PATH,
-    filename: 'bundle.[hash].js',
+    filename: 'bundle.[contenthash].js',
   },
 
   module: {
     rules: [
       {
         test: /\.css$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          'css-loader',
-          'postcss-loader',
-        ],
+        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
       },
     ],
   },
@@ -38,10 +34,17 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: 'style.[hash].css',
     }),
-    new CopyWebpackPlugin([
-      { from: '**/*', to: DIST_PATH, ignore: ['*.js', '*.css', '*.html'] },
-    ], {
-      context: 'src',
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: '**/*',
+          to: DIST_PATH,
+          context: 'src',
+          globOptions: {
+            ignore: ['**/*.js', '**/*.css', '**/*.html'],
+          },
+        },
+      ],
     }),
   ],
 };
