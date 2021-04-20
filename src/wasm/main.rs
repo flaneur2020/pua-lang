@@ -1,13 +1,13 @@
-extern crate monkey;
+extern crate pua_lang;
 
-use monkey::ast::Program;
-use monkey::evaluator::builtins::new_builtins;
-use monkey::evaluator::env::Env;
-use monkey::evaluator::object::Object;
-use monkey::evaluator::Evaluator;
-use monkey::formatter::Formatter;
-use monkey::lexer::Lexer;
-use monkey::parser::Parser;
+use pua_lang::ast::Program;
+use pua_lang::evaluator::builtins::new_builtins;
+use pua_lang::evaluator::env::Env;
+use pua_lang::evaluator::object::Object;
+use pua_lang::evaluator::Evaluator;
+use pua_lang::formatter::Formatter;
+use pua_lang::lexer::Lexer;
+use pua_lang::parser::Parser;
 use std::cell::RefCell;
 use std::ffi::{CStr, CString};
 use std::mem;

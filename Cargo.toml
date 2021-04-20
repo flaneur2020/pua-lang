@@ -1,20 +1,23 @@
 [package]
-name = "monkey"
+name = "pua-lang"
 version = "0.1.0"
-authors = ["tsuyoshiwada <wadackel@gmail.com>"]
+authors = ["flaneur <me.ssword@gmail.com>"]
 
 [dependencies]
 rustyline = { version = "1.0.0", optional = true }
-cjk = { version = "0.2.4" }
+unicode-xid = { version = "0.2.1" }
+unicode-normalization = "0.1.8"
 
 [[bin]]
-name = "monkey"
+name = "pua-lang"
 path = "src/bin/main.rs"
 required-features = ["binaries"]
 
 [[bin]]
 name = "wasm"
 path = "src/wasm/main.rs"
+required-features = ["wasm"]
 
 [features]
 binaries = ["rustyline"]
+wasm = []
