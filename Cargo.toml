@@ -1,3 +1,5 @@
+cargo-features = ["named-profiles"]
+
 [package]
 name = "pua-lang"
 version = "0.1.0"
@@ -22,3 +24,13 @@ required-features = ["wasm"]
 [features]
 binaries = ["rustyline", "rustyline-derive"]
 wasm = []
+
+[profile.release]
+lto = true
+
+[profile.tiny]
+inherits = 'release'
+opt-level = 'z'
+
+[profile.tiny.build-override]
+opt-level = 'z'

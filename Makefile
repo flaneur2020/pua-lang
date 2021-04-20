@@ -1,6 +1,5 @@
 .PHONY: setup
 setup:
-	cargo install wasm-gc
 	(cd web && yarn)
 
 .PHONY: start
@@ -17,9 +16,19 @@ build_repl:
 	cargo build --release
 
 .PHONY: build_wasm
-build_wasm:
-	cargo build --bin wasm --release --target wasm32-unknown-unknown --features=wasm
-	wasm-gc target/wasm32-unknown-unknown/release/wasm.wasm web/src/pua-lang.wasm
+build_wasm: web/src/pua-lang.wasm
+
+web/src/pua-lang.wasm: target/wasm32-unknown-unknown/tiny/wasm.wasm
+	if command -v wasm-opt >/dev/null; \
+		wasm-opt --strip-debug -Oz -o web/src/pua-lang.wasm target/wasm32-unknown-unknown/tiny/wasm.wasm; \
+	else \
+	    cp target/wasm32-unknown-unknown/tiny/wasm.wasm web/src/pua-lang.wasm;\
+	fi
+
+target/wasm32-unknown-unknown/tiny/wasm.wasm: FORCE
+	cargo build --bin wasm -Z unstable-options --profile tiny --target wasm32-unknown-unknown --features=wasm
+
+FORCE:
 
 .PHONY: web_deploy
 web_deploy:
