@@ -89,7 +89,7 @@ impl Lexer {
 
         lexer.read_char();
 
-        return lexer;
+        lexer
     }
 
     fn read_char(&mut self) {
@@ -104,9 +104,9 @@ impl Lexer {
 
     fn nextch(&mut self) -> char {
         if self.next_pos >= self.input.len() {
-            return '\0';
+            '\0'
         } else {
-            return self.input[self.next_pos];
+            self.input[self.next_pos]
         }
     }
 
@@ -199,7 +199,7 @@ impl Lexer {
 
         self.read_char();
 
-        return tok;
+        tok
     }
 
     fn consume_identifier(&mut self) -> Token {

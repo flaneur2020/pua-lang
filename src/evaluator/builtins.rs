@@ -57,7 +57,7 @@ fn monkey_last(args: Vec<Object>) -> Object {
 fn monkey_rest(args: Vec<Object>) -> Object {
     match &args[0] {
         Object::Array(o) => {
-            if o.len() > 0 {
+            if !o.is_empty() {
                 Object::Array(o[1..].to_vec())
             } else {
                 Object::Null

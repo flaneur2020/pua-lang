@@ -1,3 +1,4 @@
+#![allow(clippy::if_same_then_else)]
 use ast::*;
 
 struct FormatConfig {
@@ -114,7 +115,7 @@ impl Formatter {
 
     fn format_let_stmt(&mut self, ident: Ident, expr: Expr) -> String {
         let ident_str = self.format_ident_expr(ident);
-        let result = String::from(format!("let {} = ", ident_str));
+        let result = format!("let {} = ", ident_str);
 
         self.column += result.len();
 
@@ -209,12 +210,10 @@ impl Formatter {
                     self.indent -= 1;
                     result.push_str(&format!("\n{}", self.indent_str(0)));
                 }
+            } else if i > 0 {
+                result.push_str(&format!(", {}", expr_str));
             } else {
-                if i > 0 {
-                    result.push_str(&format!(", {}", expr_str));
-                } else {
-                    result.push_str(&expr_str);
-                }
+                result.push_str(&expr_str);
             }
         }
 

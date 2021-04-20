@@ -77,10 +77,10 @@ impl Parser {
     fn expect_next_token(&mut self, tok: Token) -> bool {
         if self.next_token_is(&tok) {
             self.bump();
-            return true;
+            true
         } else {
             self.error_next_token(tok);
-            return false;
+            false
         }
     }
 
@@ -271,7 +271,7 @@ impl Parser {
 
     fn parse_int_expr(&mut self) -> Option<Expr> {
         match self.current_token {
-            Token::Int(ref mut int) => Some(Expr::Literal(Literal::Int(int.clone()))),
+            Token::Int(ref mut int) => Some(Expr::Literal(Literal::Int(*int))),
             _ => None,
         }
     }
@@ -285,7 +285,7 @@ impl Parser {
 
     fn parse_bool_expr(&mut self) -> Option<Expr> {
         match self.current_token {
-            Token::Bool(value) => Some(Expr::Literal(Literal::Bool(value == true))),
+            Token::Bool(value) => Some(Expr::Literal(Literal::Bool(value))),
             _ => None,
         }
     }
@@ -543,7 +543,7 @@ mod tests {
     fn check_parse_errors(parser: &mut Parser) {
         let errors = parser.get_errors();
 
-        if errors.len() == 0 {
+        if errors.is_empty() {
             return;
         }
 

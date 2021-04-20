@@ -113,10 +113,6 @@ impl Validator for PuaHelper {
     }
 }
 
-struct EnvCompleter {
-    env: Rc<RefCell<Env>>,
-}
-
 // ---- Completer ----
 
 /// Given a `line` and a cursor `pos`ition,
