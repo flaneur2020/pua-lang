@@ -765,7 +765,7 @@ addTwo(2);
             (
                 "first(\"string\")",
                 Some(Object::Error(String::from(
-                    "argument to `first` must be array. got string",
+                    "argument to `first` must be array. got \"string\"",
                 ))),
             ),
             (
@@ -786,7 +786,7 @@ addTwo(2);
             (
                 "last(\"string\")",
                 Some(Object::Error(String::from(
-                    "argument to `last` must be array. got string",
+                    "argument to `last` must be array. got \"string\"",
                 ))),
             ),
             (
@@ -819,7 +819,7 @@ addTwo(2);
             (
                 "rest(\"string\")",
                 Some(Object::Error(String::from(
-                    "argument to `rest` must be array. got string",
+                    "argument to `rest` must be array. got \"string\"",
                 ))),
             ),
             (
@@ -852,7 +852,7 @@ addTwo(2);
             (
                 "push(\"string\", 1)",
                 Some(Object::Error(String::from(
-                    "argument to `push` must be array. got string",
+                    "argument to `push` must be array. got \"string\"",
                 ))),
             ),
             (

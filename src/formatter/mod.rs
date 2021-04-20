@@ -1,5 +1,6 @@
 #![allow(clippy::if_same_then_else)]
 use ast::*;
+use lexer::unescape::escape_str;
 
 struct FormatConfig {
     max_line_length: usize,
@@ -174,7 +175,7 @@ impl Formatter {
     }
 
     fn format_string_literal(&mut self, value: String) -> String {
-        let result = format!("\"{}\"", value);
+        let result = escape_str(&value);
         self.column += result.len();
         result
     }

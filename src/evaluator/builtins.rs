@@ -13,10 +13,16 @@ pub fn new_builtins() -> HashMap<String, Object> {
 
     // PUA builtin, but not aba-aba
     builtins.insert(String::from("quit"), Object::Builtin(-1, pua_quit));
+    builtins.insert(String::from("print"), Object::Builtin(1, pua_print));
+    builtins.insert(String::from("repr"), Object::Builtin(1, pua_repr));
+    builtins.insert(String::from("str"), Object::Builtin(1, pua_str));
 
     // Aba-aba builtins
     builtins.insert(String::from("淘汰"), Object::Builtin(-1, pua_quit));
     builtins.insert(String::from("输出"), Object::Builtin(-1, pua_output));
+    builtins.insert(String::from("聚焦"), Object::Builtin(1, pua_print));
+    builtins.insert(String::from("复用"), Object::Builtin(1, pua_repr));
+    builtins.insert(String::from("疏通"), Object::Builtin(1, pua_str));
     builtins
 }
 
@@ -73,6 +79,27 @@ fn monkey_push(args: Vec<Object>) -> Object {
             let mut arr = o.clone();
             arr.push(args[1].clone());
             Object::Array(arr)
+        }
+        o => Object::Error(format!("argument to `push` must be array. got {}", o)),
+    }
+}
+
+fn pua_str(args: Vec<Object>) -> Object {
+    match &args[0] {
+        Object::String(s) => Object::String(s.to_string()),
+        x => Object::String(format!("{}", x))
+    }
+}
+
+fn pua_repr(args: Vec<Object>) -> Object {
+    Object::String(format!("{}", args[0]))
+}
+
+fn pua_print(args: Vec<Object>) -> Object {
+    match &args[0] {
+        Object::String(ref o) => {
+            println!("{}", o);
+            Object::Null
         }
         o => Object::Error(format!("argument to `push` must be array. got {}", o)),
     }

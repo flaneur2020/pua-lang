@@ -4,6 +4,8 @@ extern crate unicode_normalization;
 extern crate unicode_xid;
 use crate::token::Token;
 
+pub mod unescape;
+
 /// All variable names are nfc-normaized.
 pub fn nfc_normalize(string: &str) -> String {
     use self::unicode_normalization::{is_nfc_quick, IsNormalized, UnicodeNormalization};
@@ -263,19 +265,28 @@ impl Lexer {
         self.read_char();
 
         let start_pos = self.pos;
+        let mut bs = false;
 
-        loop {
-            match self.ch {
-                '"' | '\0' => {
-                    let literal = self.input[start_pos..self.pos].iter().collect::<String>();
-                    self.read_char();
-                    return Token::String(literal);
-                }
-                _ => {
-                    self.read_char();
+        while self.ch != '\0' {
+            if bs {
+                bs = false;
+            } else {
+                match self.ch {
+                    '"' => {
+                        let literal = self.input[start_pos..self.pos].iter().collect::<String>();
+                        self.read_char();
+                        return Token::String(unescape::unescape_str_or_byte_str_all(&literal));
+                    }
+                    '\\' => {
+                        bs = true;
+                    }
+                    _ => (),
                 }
             }
+            self.read_char();
         }
+        // FIXME: Make Lexer faliable
+        Token::String("<Lexer error: string: premature EOF>".to_string())
     }
 }
 
