@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct Evaluator {
-    env: Rc<RefCell<Env>>,
+    pub env: Rc<RefCell<Env>>,
 }
 
 impl Evaluator {
@@ -108,11 +108,13 @@ impl Evaluator {
         match expr {
             Expr::Ident(ident) => Some(self.eval_ident(ident)),
             Expr::Literal(literal) => Some(self.eval_literal(literal)),
-            Expr::Prefix(prefix, right_expr) => if let Some(right) = self.eval_expr(*right_expr) {
-                Some(self.eval_prefix_expr(prefix, right))
-            } else {
-                None
-            },
+            Expr::Prefix(prefix, right_expr) => {
+                if let Some(right) = self.eval_expr(*right_expr) {
+                    Some(self.eval_prefix_expr(prefix, right))
+                } else {
+                    None
+                }
+            }
             Expr::Infix(infix, left_expr, right_expr) => {
                 let left = self.eval_expr(*left_expr);
                 let right = self.eval_expr(*right_expr);
@@ -183,27 +185,33 @@ impl Evaluator {
 
     fn eval_infix_expr(&mut self, infix: Infix, left: Object, right: Object) -> Object {
         match left {
-            Object::Int(left_value) => if let Object::Int(right_value) = right {
-                self.eval_infix_int_expr(infix, left_value, right_value)
-            } else {
-                Self::error(format!("type mismatch: {} {} {}", left, infix, right))
-            },
-            Object::String(left_value) => if let Object::String(right_value) = right {
-                self.eval_infix_string_expr(infix, left_value, right_value)
-            } else {
-                Self::error(format!("type mismatch: {} {} {}", left_value, infix, right))
-            },
+            Object::Int(left_value) => {
+                if let Object::Int(right_value) = right {
+                    self.eval_infix_int_expr(infix, left_value, right_value)
+                } else {
+                    Self::error(format!("type mismatch: {} {} {}", left, infix, right))
+                }
+            }
+            Object::String(left_value) => {
+                if let Object::String(right_value) = right {
+                    self.eval_infix_string_expr(infix, left_value, right_value)
+                } else {
+                    Self::error(format!("type mismatch: {} {} {}", left_value, infix, right))
+                }
+            }
             _ => Self::error(format!("unknown operator: {} {} {}", left, infix, right)),
         }
     }
 
     fn eval_index_expr(&mut self, left: Object, index: Object) -> Object {
         match left {
-            Object::Array(ref array) => if let Object::Int(i) = index {
-                self.eval_array_index_expr(array.clone(), i)
-            } else {
-                Self::error(format!("index operator not supported: {}", left))
-            },
+            Object::Array(ref array) => {
+                if let Object::Int(i) = index {
+                    self.eval_array_index_expr(array.clone(), i)
+                } else {
+                    Self::error(format!("index operator not supported: {}", left))
+                }
+            }
             Object::Hash(ref hash) => match index {
                 Object::Int(_) | Object::Bool(_) | Object::String(_) => match hash.get(&index) {
                     Some(o) => o.clone(),

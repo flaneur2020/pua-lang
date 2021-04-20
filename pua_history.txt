@@ -1,0 +1,9 @@
+#V2
+a
+a {\n}
+a
+fn(a)\n{ \n}
+a
+aa
+a {\n}
+fn(a) {}
