@@ -1,7 +1,7 @@
+extern crate unicode_normalization;
 /// Unicode lexer for the PUA language.
 /// Some functions taken from `rust/compiler/rustc_lexer/src/lib.rs`.
 extern crate unicode_xid;
-extern crate unicode_normalization;
 use crate::token::Token;
 
 /// All variable names are nfc-normaized.
@@ -17,7 +17,7 @@ pub fn nfc_normalize(string: &str) -> String {
 }
 
 /// True if `c` is considered a whitespace according to PUA. Does not include \n.
-fn is_whitespace(c: char) -> bool {
+pub fn is_whitespace(c: char) -> bool {
     // This is Pattern_White_Space minus \n.
     //
     // Note that this set is stable (ie, it doesn't change with different
@@ -194,7 +194,7 @@ impl Lexer {
                 } else {
                     Token::Illegal
                 }
-            },
+            }
         };
 
         self.read_char();
@@ -466,5 +466,4 @@ if (5 < 10) {
             assert_eq!(expect, tok);
         }
     }
-
 }

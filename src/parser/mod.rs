@@ -4,33 +4,18 @@ use std::fmt;
 use token::Token;
 
 #[derive(Debug, Clone)]
-pub enum ParseErrorKind {
-    UnexpectedToken,
-}
-
-impl fmt::Display for ParseErrorKind {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ParseErrorKind::UnexpectedToken => write!(f, "Unexpected Token"),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ParseError {
-    kind: ParseErrorKind,
-    msg: String,
-}
-
-impl ParseError {
-    fn new(kind: ParseErrorKind, msg: String) -> Self {
-        ParseError { kind, msg }
-    }
+pub enum ParseError {
+    UnexpectedToken { want: Option<Token>, got: Token },
 }
 
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}: {}", self.kind, self.msg)
+        match &*self {
+            ParseError::UnexpectedToken { want: w, got: g } => match w {
+                Some(w) => write!(f, "Unexpected Token: expected {:?}, got {:?}", w, g),
+                None => write!(f, "Unexpected Token: no prefix rule for {:?}", w),
+            },
+        }
     }
 }
 
@@ -76,6 +61,7 @@ impl Parser {
     }
 
     fn bump(&mut self) {
+        // FIXME: Clearly unnecessary clone
         self.current_token = self.next_token.clone();
         self.next_token = self.lexer.next_token();
     }
@@ -107,23 +93,17 @@ impl Parser {
     }
 
     fn error_next_token(&mut self, tok: Token) {
-        self.errors.push(ParseError::new(
-            ParseErrorKind::UnexpectedToken,
-            format!(
-                "expected next token to be {:?}, got {:?} instead",
-                tok, self.next_token
-            ),
-        ));
+        self.errors.push(ParseError::UnexpectedToken {
+            want: Some(tok),
+            got: self.next_token.clone(),
+        });
     }
 
     fn error_no_prefix_parser(&mut self) {
-        self.errors.push(ParseError::new(
-            ParseErrorKind::UnexpectedToken,
-            format!(
-                "no prefix parse function for \"{:?}\" found",
-                self.current_token,
-            ),
-        ));
+        self.errors.push(ParseError::UnexpectedToken {
+            want: None,
+            got: self.next_token.clone(),
+        });
     }
 
     pub fn parse(&mut self) -> Program {

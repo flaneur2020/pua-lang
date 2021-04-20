@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Env {
-    store: HashMap<String, Object>,
+    pub store: HashMap<String, Object>,
     outer: Option<Rc<RefCell<Env>>>,
 }
 
