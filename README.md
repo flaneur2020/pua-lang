@@ -55,7 +55,7 @@ $ make repl
 |puts|输出|"output"|
 |quit|淘汰|"eliminate"|
 
-The precise set of renames may change from time to time as we explore new avanues of profit and full enablement of our customers. You are encouraged to (ahem) carefully study the spirit of `src/lexer/mod.rs` and `src/evaluator/builtins.rs` in order to align yourself with Ali-speak and maximize your output.
+The precise set of renames may change from time to time as we explore ~~new avanues of profit~~ new pathways to the full enablement of our customers. You are encouraged to (ahem) carefully study the spirit of `src/lexer/mod.rs` and `src/evaluator/builtins.rs` in order to align yourself with Ali-speak and maximize your output.
 
 ### Syntax overview
 
