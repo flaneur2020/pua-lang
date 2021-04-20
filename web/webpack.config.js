@@ -32,7 +32,7 @@ module.exports = {
       minify: true,
     }),
     new MiniCssExtractPlugin({
-      filename: 'style.[hash].css',
+      filename: 'style.[contenthash].css',
     }),
     new CopyWebpackPlugin({
       patterns: [

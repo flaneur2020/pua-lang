@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "start": "webpack-serve --live-reload",
+    "start": "webpack serve",
     "build": "env NODE_ENV=production webpack-cli",
     "format": "prettier src/**/*.js src/**/*.css *.config.js --write",
     "deploy": "gh-pages -d dist",
@@ -23,7 +23,7 @@
     "prettier": "^2.2.1",
     "webpack": "^5.34.0",
     "webpack-cli": "^4.6.0",
-    "webpack-serve": "^4.0.0"
+    "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
     "escape-html": "^1.0.3",
