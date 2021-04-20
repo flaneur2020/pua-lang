@@ -5,7 +5,7 @@ import '../css/style.css';
 
 customElements.define('x-icon', Icon);
 
-Module.load('./monkey.wasm', {
+Module.load('./pua-lang.wasm', {
   print: (value) => {
     const str = Module.copyCStr(value);
     console.log(str);

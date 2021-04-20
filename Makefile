@@ -19,7 +19,7 @@ build_repl:
 .PHONY: build_wasm
 build_wasm:
 	cargo build --bin wasm --release --target wasm32-unknown-unknown --features=wasm
-	wasm-gc target/wasm32-unknown-unknown/release/wasm.wasm web/src/monkey.wasm
+	wasm-gc target/wasm32-unknown-unknown/release/wasm.wasm web/src/pua-lang.wasm
 
 .PHONY: web_deploy
 web_deploy:
