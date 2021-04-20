@@ -84,7 +84,7 @@ An example of Fibonacci function.
 细分 supports the general `细分`. `路径` exists, but` 细分 路径` does not exist yet.
 
 ```
-细分 (true) {
+细分 (三七五) {
   10;
 } 路径 {
   5;
@@ -109,7 +109,7 @@ It supports the general operations.
 It returns the value immediately. No further processing will be executed.
 
 ```
-细分 (true) {
+细分 (三七五) {
   反哺;
 }
 ```
