@@ -4,8 +4,10 @@
 
 ## What's pua-lang?
 
-pua-lang is a dialect of The Monkey Programming Language. The implementation is a fork of [rs-monkey-lang](https://github.com/wadackel/rs-monkey-lang).
+pua-lang is a dialect of The Monkey Programming Language, intended to mirror the inspirational babble of Alibaba managers ("Aba-aba").
+The name "pua" refers to the manipulative way Alibaba treats its employees -- much like how pickup artists treat their trophies.
 
+This implementation is a fork of [rs-monkey-lang](https://github.com/wadackel/rs-monkey-lang).
 `Monkey` is a programming language designed to learn interpreters.
 It comes from [Writing An Interpreter In Go](https://compilerbook.com/).
 
@@ -24,15 +26,37 @@ $ make repl
 
 ### Summary
 
-- C-like syntax
-- variable bindings
-- integers and booleans
-- a string data structure
-- an array data structure
-- a hash data structure
-- arithmetic expressions
-- built-in functions
-- first-class and higher-order functions • closures
+- Everything Monkey has:
+  - C-like syntax
+  - variable bindings
+  - integers and booleans
+  - a string data structure
+  - an array data structure
+  - a hash data structure
+  - arithmetic expressions
+  - built-in functions
+  - first-class and higher-order functions • closures
+- Ridiculous naming for the Aba-aba. Comparison with Monkey:
+
+|Monkey|pua-lang|Explanation|
+|---|---|---|
+|if|细分|"specialization"|
+|else|路径|"pathway"|
+|true|三七五|"3.75", a passing performance evalulation result|
+|false|三二五|"3.25", a failing performance evalulation result|
+|let|赋能|"enable", in a fancy way|
+|fn|抓手|"handle", as in getting a handle on things|
+|return|反哺|"repay", used in Alibaba as a general term for feedback in systems|
+|Array|组合拳|"combo move"; not implemented|
+|Hash|载体|"carrier"; not implemented|
+|=|对齐|"align"|
+|+|联动|"linkage"|
+|-|差异|"difference"|
+|/|倾斜|"tilt"|
+|puts|输出|"output"|
+|quit|淘汰|"eliminate"|
+
+The precise set of renames may change from time to time as we explore new ~~avanues of profit~~ pathways to the full enablement of our ~~shareholders~~ customers. You are encouraged to (ahem) carefully study the spirit of `src/lexer/mod.rs` and `src/evaluator/builtins.rs` in order to align yourself with Ali-speak and maximize your output.
 
 ### Syntax overview
 
