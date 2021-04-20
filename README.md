@@ -4,9 +4,10 @@
 
 ## What's pua-lang?
 
-pua-lang is a dialect of The Monkey Programming Language. The implementation is a fork of [rs-monkey-lang](https://github.com/wadackel/rs-monkey-lang).
+pua-lang is a dialect of The Monkey Programming Language, intended to mirror the inspirational babble of Alibaba managers ("Aba-aba").
 The name "pua" refers to the manipulative way Alibaba treats its employees -- much like how pickup artists treat their trophies.
 
+This implementation is a fork of [rs-monkey-lang](https://github.com/wadackel/rs-monkey-lang).
 `Monkey` is a programming language designed to learn interpreters.
 It comes from [Writing An Interpreter In Go](https://compilerbook.com/).
 
@@ -35,7 +36,7 @@ $ make repl
   - arithmetic expressions
   - built-in functions
   - first-class and higher-order functions • closures
-- Ridiculous naming to reflect how Alibaba managers speak. Comparison with Monkey:
+- Ridiculous naming for the Aba-aba. Comparison with Monkey:
 
 |Monkey|pua-lang|Explanation|
 |---|---|---|
@@ -55,7 +56,7 @@ $ make repl
 |puts|输出|"output"|
 |quit|淘汰|"eliminate"|
 
-The precise set of renames may change from time to time as we explore ~~new avanues of profit~~ new pathways to the full enablement of our customers. You are encouraged to (ahem) carefully study the spirit of `src/lexer/mod.rs` and `src/evaluator/builtins.rs` in order to align yourself with Ali-speak and maximize your output.
+The precise set of renames may change from time to time as we explore new ~~avanues of profit~~ pathways to the full enablement of our ~~shareholders~~ customers. You are encouraged to (ahem) carefully study the spirit of `src/lexer/mod.rs` and `src/evaluator/builtins.rs` in order to align yourself with Ali-speak and maximize your output.
 
 ### Syntax overview
 
