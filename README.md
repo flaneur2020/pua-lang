@@ -36,7 +36,7 @@ $ make repl
   - arithmetic expressions
   - built-in functions
   - first-class and higher-order functions • closures
-- Unicode identifiers (UAX #31, XID). Including Emojis!
+- Unicode identifiers (UAX #31, XID). No Emojis yet.
 - Full double-quoted string syntax from Rust-lang.
 - Ridiculous naming for the Aba-aba. Comparison with Monkey:
 
