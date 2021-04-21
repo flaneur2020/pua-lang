@@ -13,6 +13,9 @@ It comes from [Writing An Interpreter In Go](https://compilerbook.com/).
 
 ## Try pua-lang!
 
+### with wasm playground
+https://flaneur2020.github.io/pua-lang/
+
 ### with REPL
 
 ```bash
