@@ -101,8 +101,8 @@ It supports the general operations.
 
 ```
 1 + 2 + (3 * 4) - (10 / 5);
-!true;
-!false;
+!三七五;
+!三二五;
 +10;
 -5;
 "Hello" + " " + "World";
@@ -174,17 +174,17 @@ Five types of literals are implemented.
 **Format:**
 
 ```
-true | false;
+三七五 | 三二五;
 ```
 
 **Example:**
 
 ```
-true;
-false;
+三七五;
+三二五;
 
-赋能 truthy = !false;
-赋能 falsy = !true;
+赋能 truthy = !三二五;
+赋能 falsy = !三七五;
 ```
 
 #### String
@@ -217,11 +217,11 @@ false;
 **Example:**
 
 ```
-[1, 2, 3 + 3, fn(x) { x }, add(2, 2), true];
+[1, 2, 3 + 3, fn(x) { x }, add(2, 2), 三七五];
 ```
 
 ```
-赋能 组合拳 = [1, true, 抓手(x) { x }];
+赋能 组合拳 = [1, 三七五, 抓手(x) { x }];
 
 组合拳[0];
 组合拳[1];
@@ -245,13 +245,13 @@ false;
 赋能 载体 = {
   "name": "Jimmy",
   "age": 72,
-  true: "a boolean",
+  三七五: "a boolean",
   99: "an integer"
 };
 
 载体["name"];
 载体["a" + "ge"];
-载体[true];
+载体[三七五];
 载体[99];
 载体[100 - 1];
 ```
