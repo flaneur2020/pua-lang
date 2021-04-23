@@ -16,7 +16,7 @@ CodeMirror.defineSimpleMode('monkey', {
     { regex: /[-+\/*=<>!]|对齐|联动|差异|倾斜/, token: 'operator' },
     { regex: /[\{\[\(]/, indent: true },
     { regex: /[\}\]\)]/, dedent: true },
-    { regex: /\p{XID_Start}\p{XID_Continue}*|[a-z$][\w$]*/u, token: 'variable' },
+    { regex: /[\p{XID_Start}$¥_][\p{XID_Continue}$¥]*/u, token: 'variable' },
   ],
   comment: [],
   meta: {},
