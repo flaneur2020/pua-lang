@@ -608,6 +608,8 @@ let two = "two";
         let tests = vec![
             ("let i = 1; while (i < 3) { let i = i + 1 }; i;", Some(Object::Int(3))),
             ("赋能 i = 1; 闭环 (i < 3) { 赋能 i = i + 1 }; i;", Some(Object::Int(3))),
+            ("闭环 (4 < 3) { 3 };", None),
+            ("赋能 i = 1; 闭环 (i < 3) { 赋能 i = i+1; i}", Some(Object::Int(3))),
         ];
 
         for (input, expect) in tests {
