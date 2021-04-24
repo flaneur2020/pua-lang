@@ -14,6 +14,7 @@ pub enum Token {
     Assign,
     If,
     Else,
+    While,
 
     // Operators
     Plus,
