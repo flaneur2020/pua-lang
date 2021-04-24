@@ -330,16 +330,21 @@ impl Evaluator {
         cond: &Expr,
         consequence: &BlockStmt,
     ) -> Option<Object> {
-        let cond = match self.eval_expr(cond) {
-            Some(cond) => cond,
-            None => return None,
-        };
+        let mut result: Option<Object> = None;
 
-        while Self::is_truthy(cond.clone()) {
-            self.eval_block_stmt(consequence);
+        loop {
+            let cond_result = match self.eval_expr(cond) {
+                Some(cond) => cond,
+                None => break,
+            };
+            if !Self::is_truthy(cond_result.clone()) {
+                break;
+            }
+
+            result = self.eval_block_stmt(consequence);
         }
 
-        None
+        return result;
     }
 
     fn eval_call_expr(&mut self, func: &Box<Expr>, args: &Vec<Expr>) -> Object {
@@ -599,6 +604,18 @@ let two = "two";
     }
 
     #[test]
+    fn test_while_expr() {
+        let tests = vec![
+            ("let i = 1; while (i < 3) { let i = i + 1 }; i;", Some(Object::Int(3))),
+            ("赋能 i = 1; 闭环 (i < 3) { 赋能 i = i + 1 }; i;", Some(Object::Int(3))),
+        ];
+
+        for (input, expect) in tests {
+            assert_eq!(expect, eval(input));
+        }
+    }
+
+    #[test]
     fn test_return_stmt() {
         let tests = vec![
             ("return 10;", Some(Object::Int(10))),
@@ -627,6 +644,7 @@ if (10 > 1) {
         let tests = vec![
             ("let a = 5; a;", Some(Object::Int(5))),
             ("let a = 5 * 5; a;", Some(Object::Int(25))),
+            ("let a = 1; let a = 2; a;", Some(Object::Int(2))),
             ("let a = 5; let b = a; b;", Some(Object::Int(5))),
             (
                 "let a = 5; let b = a; let c = a + b + 5; c;",
