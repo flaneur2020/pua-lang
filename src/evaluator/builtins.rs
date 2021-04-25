@@ -16,6 +16,7 @@ pub fn new_builtins() -> HashMap<String, Object> {
     builtins.insert(String::from("print"), Object::Builtin(1, pua_print));
     builtins.insert(String::from("repr"), Object::Builtin(1, pua_repr));
     builtins.insert(String::from("str"), Object::Builtin(1, pua_str));
+    builtins.insert(String::from("atoi"), Object::Builtin(1, pua_atoi));
 
     // Aba-aba builtins
     builtins.insert(String::from("淘汰"), Object::Builtin(-1, pua_quit));
@@ -23,6 +24,7 @@ pub fn new_builtins() -> HashMap<String, Object> {
     builtins.insert(String::from("聚焦"), Object::Builtin(1, pua_print));
     builtins.insert(String::from("复用"), Object::Builtin(1, pua_repr));
     builtins.insert(String::from("疏通"), Object::Builtin(1, pua_str));
+    builtins.insert(String::from("量化"), Object::Builtin(1, pua_atoi));
     builtins
 }
 
@@ -120,5 +122,14 @@ fn pua_quit(args: Vec<Object>) -> Object {
             o => Object::Error(format!("argument to `quit` must be int. got {}", o))
         },
         _ => Object::Error(format!("Too many arguments to `quit` (want 0 or 1, got {})", args.len()))
+    }
+}
+
+fn pua_atoi(args: Vec<Object>) -> Object {
+    match &args[..] {
+        [Object::String(s)] => s.parse().map(Object::Int).unwrap_or_else(|_| {
+            Object::Error(format!("argument to `atoi` must be valid digits. got {:?}", s))
+        }),
+        _ => Object::Error(format!("illegal argument to `atoi` (want 1 string, got {:?}", args)),
     }
 }
