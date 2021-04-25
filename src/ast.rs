@@ -63,6 +63,10 @@ pub enum Expr {
         consequence: BlockStmt,
         alternative: Option<BlockStmt>,
     },
+    While {
+        cond: Box<Expr>,
+        consequence: BlockStmt,
+    },
     Func {
         params: Vec<Ident>,
         body: BlockStmt,

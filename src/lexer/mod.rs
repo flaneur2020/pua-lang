@@ -222,6 +222,7 @@ impl Lexer {
             "true" => Token::Bool(true),
             "false" => Token::Bool(false),
             "if" => Token::If,
+            "while" => Token::While,
             "else" => Token::Else,
             "return" => Token::Return,
             // PUA Aba-aba keywords
@@ -231,6 +232,7 @@ impl Lexer {
             "三二五" => Token::Bool(false),
             "细分" => Token::If,
             "路径" => Token::Else,
+            "闭环" => Token::While,
             "反哺" => Token::Return,
             "对齐" => Token::Equal,
             "联动" => Token::Plus,

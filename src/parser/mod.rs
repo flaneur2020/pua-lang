@@ -217,6 +217,7 @@ impl Parser {
             Token::Bang | Token::Minus | Token::Plus => self.parse_prefix_expr(),
             Token::Lparen => self.parse_grouped_expr(),
             Token::If => self.parse_if_expr(),
+            Token::While => self.parse_while_expr(),
             Token::Func => self.parse_func_expr(),
             _ => {
                 self.error_no_prefix_parser();
@@ -466,6 +467,30 @@ impl Parser {
             cond: Box::new(cond),
             consequence,
             alternative,
+        })
+    }
+
+    fn parse_while_expr(&mut self) -> Option<Expr> {
+        if !self.expect_next_token(Token::Lparen) {
+            return None;
+        }
+
+        self.bump();
+
+        let cond = match self.parse_expr(Precedence::Lowest) {
+            Some(expr) => expr,
+            None => return None,
+        };
+
+        if !self.expect_next_token(Token::Rparen) || !self.expect_next_token(Token::Lbrace) {
+            return None;
+        }
+
+        let consequence = self.parse_block_stmt();
+
+        Some(Expr::While {
+            cond: Box::new(cond),
+            consequence,
         })
     }
 

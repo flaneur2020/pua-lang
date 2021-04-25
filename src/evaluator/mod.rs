@@ -37,11 +37,11 @@ impl Evaluator {
         }
     }
 
-    pub fn eval(&mut self, program: Program) -> Option<Object> {
+    pub fn eval(&mut self, program: &Program) -> Option<Object> {
         let mut result = None;
 
         for stmt in program {
-            if stmt == Stmt::Blank {
+            if *stmt == Stmt::Blank {
                 continue;
             }
 
@@ -55,11 +55,11 @@ impl Evaluator {
         result
     }
 
-    fn eval_block_stmt(&mut self, stmts: BlockStmt) -> Option<Object> {
+    fn eval_block_stmt(&mut self, stmts: &BlockStmt) -> Option<Object> {
         let mut result = None;
 
         for stmt in stmts {
-            if stmt == Stmt::Blank {
+            if *stmt == Stmt::Blank {
                 continue;
             }
 
@@ -73,7 +73,7 @@ impl Evaluator {
         result
     }
 
-    fn eval_stmt(&mut self, stmt: Stmt) -> Option<Object> {
+    fn eval_stmt(&mut self, stmt: &Stmt) -> Option<Object> {
         match stmt {
             Stmt::Let(ident, expr) => {
                 let value = match self.eval_expr(expr) {
@@ -84,7 +84,7 @@ impl Evaluator {
                     Some(value)
                 } else {
                     let Ident(name) = ident;
-                    self.env.borrow_mut().set(name, &value);
+                    self.env.borrow_mut().set(name.clone(), &value);
                     None
                 }
             }
@@ -104,20 +104,20 @@ impl Evaluator {
         }
     }
 
-    fn eval_expr(&mut self, expr: Expr) -> Option<Object> {
+    fn eval_expr(&mut self, expr: &Expr) -> Option<Object> {
         match expr {
             Expr::Ident(ident) => Some(self.eval_ident(ident)),
             Expr::Literal(literal) => Some(self.eval_literal(literal)),
             Expr::Prefix(prefix, right_expr) => {
-                if let Some(right) = self.eval_expr(*right_expr) {
+                if let Some(right) = self.eval_expr(&*right_expr) {
                     Some(self.eval_prefix_expr(prefix, right))
                 } else {
                     None
                 }
             }
             Expr::Infix(infix, left_expr, right_expr) => {
-                let left = self.eval_expr(*left_expr);
-                let right = self.eval_expr(*right_expr);
+                let left = self.eval_expr(&*left_expr);
+                let right = self.eval_expr(&*right_expr);
                 if left.is_some() && right.is_some() {
                     Some(self.eval_infix_expr(infix, left.unwrap(), right.unwrap()))
                 } else {
@@ -125,8 +125,8 @@ impl Evaluator {
                 }
             }
             Expr::Index(left_expr, index_expr) => {
-                let left = self.eval_expr(*left_expr);
-                let index = self.eval_expr(*index_expr);
+                let left = self.eval_expr(&*left_expr);
+                let index = self.eval_expr(&*index_expr);
                 if left.is_some() && index.is_some() {
                     Some(self.eval_index_expr(left.unwrap(), index.unwrap()))
                 } else {
@@ -137,13 +137,17 @@ impl Evaluator {
                 cond,
                 consequence,
                 alternative,
-            } => self.eval_if_expr(*cond, consequence, alternative),
-            Expr::Func { params, body } => Some(Object::Func(params, body, Rc::clone(&self.env))),
+            } => self.eval_if_expr(&*cond, consequence, alternative),
+            Expr::While {
+                cond,
+                consequence,
+            } => self.eval_while_expr(&*cond, consequence),
+            Expr::Func { params, body } => Some(Object::Func(params.clone(), body.clone(), Rc::clone(&self.env))),
             Expr::Call { func, args } => Some(self.eval_call_expr(func, args)),
         }
     }
 
-    fn eval_ident(&mut self, ident: Ident) -> Object {
+    fn eval_ident(&mut self, ident: &Ident) -> Object {
         let Ident(name) = ident;
 
         match self.env.borrow_mut().get(name.clone()) {
@@ -152,7 +156,7 @@ impl Evaluator {
         }
     }
 
-    fn eval_prefix_expr(&mut self, prefix: Prefix, right: Object) -> Object {
+    fn eval_prefix_expr(&mut self, prefix: &Prefix, right: Object) -> Object {
         match prefix {
             Prefix::Not => self.eval_not_op_expr(right),
             Prefix::Minus => self.eval_minus_prefix_op_expr(right),
@@ -183,7 +187,7 @@ impl Evaluator {
         }
     }
 
-    fn eval_infix_expr(&mut self, infix: Infix, left: Object, right: Object) -> Object {
+    fn eval_infix_expr(&mut self, infix: &Infix, left: Object, right: Object) -> Object {
         match left {
             Object::Int(left_value) => {
                 if let Object::Int(right_value) = right {
@@ -237,7 +241,7 @@ impl Evaluator {
         }
     }
 
-    fn eval_infix_int_expr(&mut self, infix: Infix, left: i64, right: i64) -> Object {
+    fn eval_infix_int_expr(&mut self, infix: &Infix, left: i64, right: i64) -> Object {
         match infix {
             Infix::Plus => Object::Int(left + right),
             Infix::Minus => Object::Int(left - right),
@@ -252,7 +256,7 @@ impl Evaluator {
         }
     }
 
-    fn eval_infix_string_expr(&mut self, infix: Infix, left: String, right: String) -> Object {
+    fn eval_infix_string_expr(&mut self, infix: &Infix, left: String, right: String) -> Object {
         match infix {
             Infix::Plus => Object::String(format!("{}{}", left, right)),
             _ => Object::Error(String::from(format!(
@@ -262,26 +266,26 @@ impl Evaluator {
         }
     }
 
-    fn eval_literal(&mut self, literal: Literal) -> Object {
+    fn eval_literal(&mut self, literal: &Literal) -> Object {
         match literal {
-            Literal::Int(value) => Object::Int(value),
-            Literal::Bool(value) => Object::Bool(value),
-            Literal::String(value) => Object::String(value),
+            Literal::Int(value) => Object::Int(*value),
+            Literal::Bool(value) => Object::Bool(*value),
+            Literal::String(value) => Object::String(value.clone()),
             Literal::Array(objects) => self.eval_array_literal(objects),
             Literal::Hash(pairs) => self.eval_hash_literal(pairs),
         }
     }
 
-    fn eval_array_literal(&mut self, objects: Vec<Expr>) -> Object {
+    fn eval_array_literal(&mut self, objects: &Vec<Expr>) -> Object {
         Object::Array(
             objects
                 .iter()
-                .map(|e| self.eval_expr(e.clone()).unwrap_or(Object::Null))
+                .map(|e| self.eval_expr(&e.clone()).unwrap_or(Object::Null))
                 .collect::<Vec<_>>(),
         )
     }
 
-    fn eval_hash_literal(&mut self, pairs: Vec<(Expr, Expr)>) -> Object {
+    fn eval_hash_literal(&mut self, pairs: &Vec<(Expr, Expr)>) -> Object {
         let mut hash = HashMap::new();
 
         for (key_expr, value_expr) in pairs {
@@ -303,9 +307,9 @@ impl Evaluator {
 
     fn eval_if_expr(
         &mut self,
-        cond: Expr,
-        consequence: BlockStmt,
-        alternative: Option<BlockStmt>,
+        cond: &Expr,
+        consequence: &BlockStmt,
+        alternative: &Option<BlockStmt>,
     ) -> Option<Object> {
         let cond = match self.eval_expr(cond) {
             Some(cond) => cond,
@@ -321,13 +325,35 @@ impl Evaluator {
         }
     }
 
-    fn eval_call_expr(&mut self, func: Box<Expr>, args: Vec<Expr>) -> Object {
+    fn eval_while_expr(
+        &mut self,
+        cond: &Expr,
+        consequence: &BlockStmt,
+    ) -> Option<Object> {
+        let mut result: Option<Object> = None;
+
+        loop {
+            let cond_result = match self.eval_expr(cond) {
+                Some(cond) => cond,
+                None => break,
+            };
+            if !Self::is_truthy(cond_result.clone()) {
+                break;
+            }
+
+            result = self.eval_block_stmt(consequence);
+        }
+
+        return result;
+    }
+
+    fn eval_call_expr(&mut self, func: &Box<Expr>, args: &Vec<Expr>) -> Object {
         let args = args
             .iter()
-            .map(|e| self.eval_expr(e.clone()).unwrap_or(Object::Null))
+            .map(|e| self.eval_expr(e).unwrap_or(Object::Null))
             .collect::<Vec<_>>();
 
-        let (params, body, env) = match self.eval_expr(*func) {
+        let (params, body, env) = match self.eval_expr(&*func) {
             Some(Object::Func(params, body, env)) => (params, body, env),
             Some(Object::Builtin(expect_param_num, f)) => {
                 if expect_param_num < 0 || expect_param_num == args.len() as i32 {
@@ -362,7 +388,7 @@ impl Evaluator {
 
         self.env = Rc::new(RefCell::new(scoped_env));
 
-        let object = self.eval_block_stmt(body);
+        let object = self.eval_block_stmt(&body);
 
         self.env = current_env;
 
@@ -383,7 +409,7 @@ mod tests {
 
     fn eval(input: &str) -> Option<Object> {
         Evaluator::new(Rc::new(RefCell::new(Env::from(new_builtins()))))
-            .eval(Parser::new(Lexer::new(input)).parse())
+            .eval(&Parser::new(Lexer::new(input)).parse())
     }
 
     #[test]
@@ -578,6 +604,20 @@ let two = "two";
     }
 
     #[test]
+    fn test_while_expr() {
+        let tests = vec![
+            ("let i = 1; while (i < 3) { let i = i + 1 }; i;", Some(Object::Int(3))),
+            ("赋能 i = 1; 闭环 (i < 3) { 赋能 i = i + 1 }; i;", Some(Object::Int(3))),
+            ("闭环 (4 < 3) { 3 };", None),
+            ("赋能 i = 1; 闭环 (i < 3) { 赋能 i = i+1; i}", Some(Object::Int(3))),
+        ];
+
+        for (input, expect) in tests {
+            assert_eq!(expect, eval(input));
+        }
+    }
+
+    #[test]
     fn test_return_stmt() {
         let tests = vec![
             ("return 10;", Some(Object::Int(10))),
@@ -606,6 +646,7 @@ if (10 > 1) {
         let tests = vec![
             ("let a = 5; a;", Some(Object::Int(5))),
             ("let a = 5 * 5; a;", Some(Object::Int(25))),
+            ("let a = 1; let a = 2; a;", Some(Object::Int(2))),
             ("let a = 5; let b = a; b;", Some(Object::Int(5))),
             (
                 "let a = 5; let b = a; let c = a + b + 5; c;",
