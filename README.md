@@ -47,6 +47,7 @@ $ make repl
 |---|---|---|
 |if|细分|"specialization"|
 |else|路径|"pathway"|
+|while|闭环|"closed loop"|
 |true|三七五|"3.75", a passing performance evalulation result|
 |false|三二五|"3.25", a failing performance evalulation result|
 |let|赋能|"enable", in a fancy way|
@@ -95,6 +96,17 @@ An example of Fibonacci function.
 }
 ```
 
+#### 闭环
+
+With the 闭环 we can execute a set of statements as long as a condition is 三七五.
+
+```
+闭环 (三七五) {
+    输出("年年有抓手");
+}
+```
+
+
 #### Operators
 
 It supports the general operations.
@@ -105,7 +117,7 @@ It supports the general operations.
 !三二五;
 +10;
 -5;
-"Hello" + " " + "World";
+"年年有抓手" + " " + "岁岁有闭环";
 ```
 
 #### 反哺
