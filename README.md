@@ -50,7 +50,7 @@ $ make repl
 |while|闭环|"closed loop"|
 |true|三七五|"3.75", a passing performance evalulation result|
 |false|三二五|"3.25", a failing performance evalulation result|
-|let|赋能|"enable", in a fancy way|
+|let|赋能|"empower"|
 |fn|抓手|"handle", as in getting a handle on things|
 |return|反哺|"repay", used in Alibaba as a general term for feedback in systems|
 |Array|组合拳|"combo move"; not yet a word in the language|
@@ -61,6 +61,7 @@ $ make repl
 |/|倾斜|"tilt"|
 |puts|输出|"output"|
 |quit|淘汰|"eliminate"|
+|(atoi)|量化|quantify
 
 The precise set of renames may change from time to time as we explore new ~~avanues of profit~~ pathways to the full enablement of our ~~shareholders~~ customers. You are encouraged to (ahem) carefully study the spirit of `src/lexer/mod.rs` and `src/evaluator/builtins.rs` in order to align yourself with Ali-speak and maximize your output.
 

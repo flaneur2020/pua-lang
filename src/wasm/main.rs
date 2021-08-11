@@ -83,7 +83,7 @@ pub fn eval(input_ptr: *mut c_char) -> *mut c_char {
     );
 
     let mut evaluator = Evaluator::new(Rc::new(RefCell::new(env)));
-    let evaluated = evaluator.eval(program).unwrap_or(Object::Null);
+    let evaluated = evaluator.eval(&program).unwrap_or(Object::Null);
     let output = format!("{}", evaluated);
 
     string_to_ptr(output)
