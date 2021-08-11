@@ -16,6 +16,9 @@ It comes from [Writing An Interpreter In Go](https://compilerbook.com/).
 ### with wasm playground
 https://flaneur2020.github.io/pua-lang/
 
+We are aware that the output streams don't quite work.  Rust doesn't really
+have I/O redirection and `wasm32-unknown-unknown` has no I/O by default.
+
 ### with REPL
 
 ```bash
