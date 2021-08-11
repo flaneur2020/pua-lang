@@ -109,11 +109,7 @@ impl Evaluator {
             Expr::Ident(ident) => Some(self.eval_ident(ident)),
             Expr::Literal(literal) => Some(self.eval_literal(literal)),
             Expr::Prefix(prefix, right_expr) => {
-                if let Some(right) = self.eval_expr(&*right_expr) {
-                    Some(self.eval_prefix_expr(prefix, right))
-                } else {
-                    None
-                }
+                self.eval_expr(&*right_expr).map(|right| self.eval_prefix_expr(prefix, right))
             }
             Expr::Infix(infix, left_expr, right_expr) => {
                 let left = self.eval_expr(&*left_expr);
@@ -153,7 +149,7 @@ impl Evaluator {
 
         match self.env.borrow_mut().get(name.clone()) {
             Some(value) => value,
-            None => Object::Error(String::from(format!("identifier not found: {}", name))),
+            None => Object::Error(format!("identifier not found: {}", name)),
         }
     }
 
@@ -260,10 +256,10 @@ impl Evaluator {
     fn eval_infix_string_expr(&mut self, infix: &Infix, left: String, right: String) -> Object {
         match infix {
             Infix::Plus => Object::String(format!("{}{}", left, right)),
-            _ => Object::Error(String::from(format!(
+            _ => Object::Error(format!(
                 "unknown operator: {} {} {}",
                 left, infix, right
-            ))),
+            )),
         }
     }
 
@@ -341,7 +337,7 @@ impl Evaluator {
             result = self.eval_block_stmt(consequence);
         }
 
-        return result;
+        result
     }
 
     fn eval_call_expr(&mut self, func: &Box<Expr>, args: &Vec<Expr>) -> Object {

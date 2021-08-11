@@ -264,10 +264,7 @@ impl Parser {
     }
 
     fn parse_ident_expr(&mut self) -> Option<Expr> {
-        match self.parse_ident() {
-            Some(ident) => Some(Expr::Ident(ident)),
-            None => None,
-        }
+        self.parse_ident().map(Expr::Ident)
     }
 
     fn parse_int_expr(&mut self) -> Option<Expr> {
@@ -292,10 +289,7 @@ impl Parser {
     }
 
     fn parse_array_expr(&mut self) -> Option<Expr> {
-        match self.parse_expr_list(Token::Rbracket) {
-            Some(list) => Some(Expr::Literal(Literal::Array(list))),
-            None => None,
-        }
+        self.parse_expr_list(Token::Rbracket).map(|list| Expr::Literal(Literal::Array(list)))
     }
 
     fn parse_hash_expr(&mut self) -> Option<Expr> {
@@ -376,10 +370,7 @@ impl Parser {
 
         self.bump();
 
-        match self.parse_expr(Precedence::Prefix) {
-            Some(expr) => Some(Expr::Prefix(prefix, Box::new(expr))),
-            None => None,
-        }
+        self.parse_expr(Precedence::Prefix).map(|expr| Expr::Prefix(prefix, Box::new(expr)))
     }
 
     fn parse_infix_expr(&mut self, left: Expr) -> Option<Expr> {
@@ -401,10 +392,7 @@ impl Parser {
 
         self.bump();
 
-        match self.parse_expr(precedence) {
-            Some(expr) => Some(Expr::Infix(infix, Box::new(left), Box::new(expr))),
-            None => None,
-        }
+        self.parse_expr(precedence).map(|expr| Expr::Infix(infix, Box::new(left), Box::new(expr)))
     }
 
     fn parse_index_expr(&mut self, left: Expr) -> Option<Expr> {

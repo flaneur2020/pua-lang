@@ -84,7 +84,7 @@ impl Formatter {
             self.column = self.indent * 2 + 1;
 
             if i > 0 {
-                result.push_str("\n");
+                result.push('\n');
             }
 
             let indent_str = if stmt == Stmt::Blank {
@@ -201,7 +201,7 @@ impl Formatter {
 
             if wrap {
                 if i == 0 {
-                    result.push_str("\n");
+                    result.push('\n');
                 } else {
                     result.push_str(",\n");
                 }
@@ -245,7 +245,7 @@ impl Formatter {
 
             if wrap {
                 if i > 0 {
-                    result.push_str(",");
+                    result.push(',');
                 }
 
                 result.push_str(&format!(
@@ -261,7 +261,7 @@ impl Formatter {
                 }
             } else {
                 if i == 0 {
-                    result.push_str(" ");
+                    result.push(' ');
                 } else {
                     result.push_str(", ");
                 }
@@ -269,7 +269,7 @@ impl Formatter {
                 result.push_str(&format!("{}: {}", key_str, value_str));
 
                 if i + 1 == total {
-                    result.push_str(" ");
+                    result.push(' ');
                 }
             }
         }
