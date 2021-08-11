@@ -147,10 +147,7 @@ impl Formatter {
                 consequence,
                 alternative,
             } => self.format_if_expr(cond, consequence, alternative),
-            Expr::While {
-                cond,
-                consequence,
-            } => self.format_while_expr(cond, consequence),
+            Expr::While { cond, consequence } => self.format_while_expr(cond, consequence),
             Expr::Func { params, body } => self.format_func_expr(params, body),
             Expr::Call { func, args } => self.format_call_expr(func, args),
         }
@@ -350,11 +347,7 @@ impl Formatter {
         result
     }
 
-    fn format_while_expr(
-        &mut self,
-        cond: Box<Expr>,
-        consequence: BlockStmt,
-    ) -> String {
+    fn format_while_expr(&mut self, cond: Box<Expr>, consequence: BlockStmt) -> String {
         let cond_str = self.format_expr(*cond, Precedence::Lowest);
         self.indent += 1;
 

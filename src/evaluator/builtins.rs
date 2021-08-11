@@ -89,7 +89,7 @@ fn monkey_push(args: Vec<Object>) -> Object {
 fn pua_str(args: Vec<Object>) -> Object {
     match &args[0] {
         Object::String(s) => Object::String(s.to_string()),
-        x => Object::String(format!("{}", x))
+        x => Object::String(format!("{}", x)),
     }
 }
 
@@ -119,17 +119,26 @@ fn pua_quit(args: Vec<Object>) -> Object {
         0 => std::process::exit(0),
         1 => match &args[0] {
             Object::Int(i) => std::process::exit(*i as i32),
-            o => Object::Error(format!("argument to `quit` must be int. got {}", o))
+            o => Object::Error(format!("argument to `quit` must be int. got {}", o)),
         },
-        _ => Object::Error(format!("Too many arguments to `quit` (want 0 or 1, got {})", args.len()))
+        _ => Object::Error(format!(
+            "Too many arguments to `quit` (want 0 or 1, got {})",
+            args.len()
+        )),
     }
 }
 
 fn pua_atoi(args: Vec<Object>) -> Object {
     match &args[..] {
         [Object::String(s)] => s.parse().map(Object::Int).unwrap_or_else(|_| {
-            Object::Error(format!("argument to `atoi` must be valid digits. got {:?}", s))
+            Object::Error(format!(
+                "argument to `atoi` must be valid digits. got {:?}",
+                s
+            ))
         }),
-        _ => Object::Error(format!("illegal argument to `atoi` (want 1 string, got {:?}", args)),
+        _ => Object::Error(format!(
+            "illegal argument to `atoi` (want 1 string, got {:?}",
+            args
+        )),
     }
 }

@@ -2,12 +2,12 @@
 
 use ast::*;
 use evaluator::env::*;
+use lexer::unescape::escape_str;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
-use lexer::unescape::escape_str;
 
 pub type BuiltinFunc = fn(Vec<Object>) -> Object;
 

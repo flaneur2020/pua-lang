@@ -138,11 +138,12 @@ impl Evaluator {
                 consequence,
                 alternative,
             } => self.eval_if_expr(&*cond, consequence, alternative),
-            Expr::While {
-                cond,
-                consequence,
-            } => self.eval_while_expr(&*cond, consequence),
-            Expr::Func { params, body } => Some(Object::Func(params.clone(), body.clone(), Rc::clone(&self.env))),
+            Expr::While { cond, consequence } => self.eval_while_expr(&*cond, consequence),
+            Expr::Func { params, body } => Some(Object::Func(
+                params.clone(),
+                body.clone(),
+                Rc::clone(&self.env),
+            )),
             Expr::Call { func, args } => Some(self.eval_call_expr(func, args)),
         }
     }
@@ -325,11 +326,7 @@ impl Evaluator {
         }
     }
 
-    fn eval_while_expr(
-        &mut self,
-        cond: &Expr,
-        consequence: &BlockStmt,
-    ) -> Option<Object> {
+    fn eval_while_expr(&mut self, cond: &Expr, consequence: &BlockStmt) -> Option<Object> {
         let mut result: Option<Object> = None;
 
         loop {
@@ -606,10 +603,19 @@ let two = "two";
     #[test]
     fn test_while_expr() {
         let tests = vec![
-            ("let i = 1; while (i < 3) { let i = i + 1 }; i;", Some(Object::Int(3))),
-            ("赋能 i = 1; 闭环 (i < 3) { 赋能 i = i + 1 }; i;", Some(Object::Int(3))),
+            (
+                "let i = 1; while (i < 3) { let i = i + 1 }; i;",
+                Some(Object::Int(3)),
+            ),
+            (
+                "赋能 i = 1; 闭环 (i < 3) { 赋能 i = i + 1 }; i;",
+                Some(Object::Int(3)),
+            ),
             ("闭环 (4 < 3) { 3 };", None),
-            ("赋能 i = 1; 闭环 (i < 3) { 赋能 i = i+1; i}", Some(Object::Int(3))),
+            (
+                "赋能 i = 1; 闭环 (i < 3) { 赋能 i = i+1; i}",
+                Some(Object::Int(3)),
+            ),
         ];
 
         for (input, expect) in tests {
