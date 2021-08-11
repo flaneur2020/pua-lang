@@ -47,6 +47,31 @@ pub fn is_whitespace(c: char) -> bool {
     )
 }
 
+/// Decide whether character may show up in emoji.
+/// We cannot validate the entire sequence given the current architecture.
+fn is_emoji_like(c: char) -> bool {
+    if c < '\x7f' {
+        false
+    } else {
+        // ZWJ
+        c == '\u{200D}'
+        // VS15, 16
+        || c == '\u{fe0f}' || c == '\u{fe0e}'
+        // Big SMP chunk (includes modifiers and by accident chess)
+        || ('\u{1f000}'..='\u{1faff}').contains(&c)
+        // The BMP parts that follow are actually quite questionable
+        || c == '\u{2139}'
+        // (unstable!) Arrows, not sure if we will repocess them for operators!
+        || ('\u{2190}'..='\u{21FF}').contains(&c)
+        || ('\u{2300}'..='\u{23FF}').contains(&c)
+        || ('\u{25A0}'..='\u{25FF}').contains(&c)
+        || ('\u{2600}'..='\u{26FF}').contains(&c)
+        // (unstable!) Dingbats, some are unfortunately punctuations
+        || ('\u{2700}'..='\u{27FF}').contains(&c)
+        // Too lazy to do 2800-329f, will come back later
+    }
+}
+
 /// True if `c` is valid as a first character of an identifier.
 /// Compared to Rust, we additionally allow $ and ¥.
 fn is_id_start(c: char) -> bool {
@@ -56,6 +81,7 @@ fn is_id_start(c: char) -> bool {
         || c == '$'
         || c == '¥'
         || (c > '\x7f' && unicode_xid::UnicodeXID::is_xid_start(c))
+        || is_emoji_like(c)
 }
 
 /// True if `c` is valid as a non-first character of an identifier.
@@ -68,6 +94,7 @@ fn is_id_continue(c: char) -> bool {
         || c == '$'
         || c == '¥'
         || (c > '\x7f' && unicode_xid::UnicodeXID::is_xid_continue(c))
+        || is_emoji_like(c)
 }
 
 pub struct Lexer {

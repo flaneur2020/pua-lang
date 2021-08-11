@@ -42,8 +42,8 @@ $ make repl
   - arithmetic expressions
   - built-in functions
   - first-class and higher-order functions • closures
-- Unicode identifiers (UAX #31, XID) plus monetary extensions (`[¥$_]`). No Emojis yet.
-- Full double-quoted string syntax from Rust-lang.
+- Unicode identifiers (UAX #31, XID) plus monetary extensions (`[¥$_]`) and an overly-lax definition of Emojis.
+- Rust-compatible double-quoted string syntax.
 - Ridiculous naming for the Aba-aba. Comparison with Monkey:
 
 |Monkey|pua-lang|Explanation|
