@@ -175,7 +175,7 @@ fn main() {
                 // No error check: rl should handle that.
                 // Yes this is reckless.
 
-                if let Some(evaluated) = evaluator.eval(program) {
+                if let Some(evaluated) = evaluator.eval(&program) {
                     println!("{}\n", evaluated);
                 }
             }
