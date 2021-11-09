@@ -73,19 +73,18 @@ The precise set of renames may change from time to time as we explore new ~~avan
 An example of Fibonacci function.
 
 ```
-赋能 堆叠_fib = 抓手(x) {
+赋能 fib = 抓手(x) {
   细分 (x 对齐 0) {
-    0;
+    反哺 0;
+  }
+  细分 (x 对齐 1) {
+    反哺 1;
   } 路径 {
-    细分 (x 对齐 1) {
-      1;
-    } 路径 {
-      堆叠_fib(x - 1) 联动 堆叠_fib(x - 2);
-    }
+    反哺 fib(x - 1) 联动 fib(x - 2);
   }
 };
 
-堆叠_fib(10);
+fib(10);
 ```
 
 #### 细分
