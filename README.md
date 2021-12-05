@@ -51,12 +51,12 @@ $ make repl
 |if|细分|"specialization"|
 |else|路径|"pathway"|
 |while|闭环|"closed loop"|
-|true|三七五|"3.75", a passing performance evalulation result|
-|false|三二五|"3.25", a failing performance evalulation result|
+|true|三七五|"3.75", an exceeding expectation performance score|
+|false|三二五|"3.25", a failed to meet expectation performance score|
 |let|赋能|"empower"|
 |fn|抓手|"handle", as in getting a handle on things|
 |return|反哺|"repay", used in Alibaba as a general term for feedback in systems|
-|Array|组合拳|"combo move"; not yet a word in the language|
+|Array|组合拳|"combo move", "a combination of strategies"; not yet a word in the language|
 |Hash|载体|"carrier"; not yet a word in the language|
 |=|对齐|"align"|
 |+|联动|"linkage"|
