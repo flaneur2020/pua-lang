@@ -638,6 +638,18 @@ let two = "two";
                 Some(Object::Int(3)),
             ),
             (
+                "let i = 0; while (i < 5) { let i = i + 1; if (i == 2) { return i; } };",
+                Some(Object::Int(2)),
+            ),
+            (
+                "let i = 0; let j = 0; while (i < 5) { let i = i + 1; if (i == 2) { break; } let j = j + 1; }; j;",
+                Some(Object::Int(1)),
+            ),
+            (
+                "let i = 0; let j = 0; while (i < 5) { let i = i + 1; if (i == 2) { continue; } let j = j + 1; }; j;",
+                Some(Object::Int(4)),
+            ),
+            (
                 "赋能 i = 1; 闭环 (i < 3) { 赋能 i = i + 1 }; i;",
                 Some(Object::Int(3)),
             ),
