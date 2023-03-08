@@ -250,6 +250,8 @@ impl Lexer {
             "false" => Token::Bool(false),
             "if" => Token::If,
             "while" => Token::While,
+            "break" => Token::Break,
+            "continue" => Token::Continue,
             "else" => Token::Else,
             "return" => Token::Return,
             // PUA Aba-aba keywords

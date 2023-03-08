@@ -22,6 +22,8 @@ pub enum Object {
     Builtin(i32, BuiltinFunc),
     Null,
     ReturnValue(Box<Object>),
+    BreakStatement,
+    ContinueStatement,
     Error(String),
 }
 
@@ -67,6 +69,8 @@ impl fmt::Display for Object {
             }
             Object::Builtin(_, _) => write!(f, "[builtin function]"),
             Object::Null => write!(f, "null"),
+            Object::BreakStatement => write!(f, "[break statement]"),
+            Object::ContinueStatement => write!(f, "[continue statement]"),
             Object::ReturnValue(ref value) => write!(f, "ReturnValue({})", value),
             Object::Error(ref value) => write!(f, "Error({})", value),
         }

@@ -15,6 +15,8 @@ pub enum Token {
     If,
     Else,
     While,
+    Break,
+    Continue,
 
     // Operators
     Plus,
