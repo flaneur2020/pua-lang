@@ -262,6 +262,7 @@ impl Lexer {
             "细分" => Token::If,
             "路径" => Token::Else,
             "闭环" => Token::While,
+            "破圈" => Token::Break,
             "反哺" => Token::Return,
             "对齐" => Token::Equal,
             "联动" => Token::Plus,

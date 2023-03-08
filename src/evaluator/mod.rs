@@ -658,6 +658,10 @@ let two = "two";
                 "赋能 i = 1; 闭环 (i < 3) { 赋能 i = i+1; i}",
                 Some(Object::Int(3)),
             ),
+            (
+                "赋能 i = 0; 赋能 j = 0; 闭环 (i < 5) { 赋能 i = i + 1; if (i == 2) { 破圈; } 赋能 j = j + 1; }; j;",
+                Some(Object::Int(1)),
+            ),
         ];
 
         for (input, expect) in tests {
