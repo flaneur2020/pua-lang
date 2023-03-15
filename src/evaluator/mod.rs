@@ -73,6 +73,26 @@ impl Evaluator {
         result
     }
 
+    fn eval_block_stmt_with_continue_and_break_statement(&mut self, stmts: &BlockStmt) -> Option<Object> {
+        let mut result = None;
+
+        for stmt in stmts {
+            if *stmt == Stmt::Blank {
+                continue;
+            }
+
+            match self.eval_stmt(stmt) {
+                Some(Object::ReturnValue(value)) => return Some(Object::ReturnValue(value)),
+                Some(Object::BreakStatement) => return Some(Object::BreakStatement),
+                Some(Object::ContinueStatement) => return Some(Object::ContinueStatement),
+                Some(Object::Error(msg)) => return Some(Object::Error(msg)),
+                obj => result = obj,
+            }
+        }
+
+        result
+    }
+
     fn eval_stmt(&mut self, stmt: &Stmt) -> Option<Object> {
         match stmt {
             Stmt::Let(ident, expr) => {
@@ -88,6 +108,8 @@ impl Evaluator {
                     None
                 }
             }
+            Stmt::Break => Some(Object::BreakStatement),
+            Stmt::Continue => Some(Object::ContinueStatement),
             Stmt::Expr(expr) => self.eval_expr(expr),
             Stmt::Return(expr) => {
                 let value = match self.eval_expr(expr) {
@@ -334,7 +356,19 @@ impl Evaluator {
                 break;
             }
 
-            result = self.eval_block_stmt(consequence);
+            result = self.eval_block_stmt_with_continue_and_break_statement(consequence);
+            match result {
+                Some(Object::BreakStatement) => {
+                    result = Some(Object::Null);
+                    break;
+                },
+                Some(Object::ContinueStatement) => {
+                    result = Some(Object::Null);
+                    continue;
+                },
+                Some(Object::ReturnValue(value)) => return Some(Object::ReturnValue(value)),
+                _ => {}
+            }
         }
 
         result
@@ -604,6 +638,18 @@ let two = "two";
                 Some(Object::Int(3)),
             ),
             (
+                "let i = 0; while (i < 5) { let i = i + 1; if (i == 2) { return i; } };",
+                Some(Object::Int(2)),
+            ),
+            (
+                "let i = 0; let j = 0; while (i < 5) { let i = i + 1; if (i == 2) { break; } let j = j + 1; }; j;",
+                Some(Object::Int(1)),
+            ),
+            (
+                "let i = 0; let j = 0; while (i < 5) { let i = i + 1; if (i == 2) { continue; } let j = j + 1; }; j;",
+                Some(Object::Int(4)),
+            ),
+            (
                 "赋能 i = 1; 闭环 (i < 3) { 赋能 i = i + 1 }; i;",
                 Some(Object::Int(3)),
             ),
@@ -611,6 +657,10 @@ let two = "two";
             (
                 "赋能 i = 1; 闭环 (i < 3) { 赋能 i = i+1; i}",
                 Some(Object::Int(3)),
+            ),
+            (
+                "赋能 i = 0; 赋能 j = 0; 闭环 (i < 5) { 赋能 i = i + 1; if (i == 2) { 破圈; } 赋能 j = j + 1; }; j;",
+                Some(Object::Int(1)),
             ),
         ];
 
