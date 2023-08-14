@@ -42,6 +42,7 @@ pub enum Token {
     Rbrace,
     Lbracket,
     Rbracket,
+    Dot,
 
     // Reseved keywords
     Func,

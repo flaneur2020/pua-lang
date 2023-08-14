@@ -581,7 +581,9 @@ let two = "two";
     fn test_hash_index_expr() {
         let tests = vec![
             ("{\"foo\": 5}[\"foo\"]", Some(Object::Int(5))),
+            ("{\"foo\": 5}.foo", Some(Object::Int(5))),
             ("{\"foo\": 5}[\"bar\"]", Some(Object::Null)),
+            ("{\"foo\": 5}.bar", Some(Object::Null)),
             ("let key = \"foo\"; {\"foo\": 5}[key]", Some(Object::Int(5))),
             ("{}[\"foo\"]", Some(Object::Null)),
             ("{5: 5}[5]", Some(Object::Int(5))),

@@ -197,6 +197,7 @@ impl Lexer {
             '}' => Token::Rbrace,
             '[' => Token::Lbracket,
             ']' => Token::Rbracket,
+            '.' => Token::Dot,
             ',' => Token::Comma,
             ';' => Token::Semicolon,
             ':' => Token::Colon,
