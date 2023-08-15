@@ -265,6 +265,7 @@ Five types of literals are implemented.
 };
 
 载体["name"];
+载体.name;
 载体["a" + "ge"];
 载体[三七五];
 载体[99];
