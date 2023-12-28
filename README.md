@@ -51,6 +51,7 @@ $ make repl
 |if|细分|"specialization"|
 |else|路径|"pathway"|
 |while|闭环|"closed loop"|
+|break|破圈|"break the circle"|
 |true|三七五|"3.75", a passing performance evalulation result|
 |false|三二五|"3.25", a failing performance evalulation result|
 |let|赋能|"empower"|
