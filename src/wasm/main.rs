@@ -57,9 +57,13 @@ pub fn alloc(size: usize) -> *mut c_void {
 
 #[no_mangle]
 pub fn dealloc(ptr: *mut c_void, size: usize) {
-    unsafe {
-        let _buf = Vec::from_raw_parts(ptr, 0, size);
+    // Clear memory to zero for security purposes (optional).
+    if !ptr.is_null() && size > 0 {
+        unsafe {
+            std::ptr::write_bytes(ptr, 0, size);
+        }
     }
+    // The memory deallocation is deferred to the caller (e.g., via `free`).
 }
 
 #[no_mangle]
